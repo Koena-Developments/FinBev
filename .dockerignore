@@ -1,0 +1,15 @@
+**/.git
+**/.vs
+**/.idea
+**/bin
+**/obj
+**/node_modules
+frontend
+secrets
+.postgres
+**/.env
+**/.env.*
+!**/.env.example
+**/*.user
+**/*.md
+!README.md

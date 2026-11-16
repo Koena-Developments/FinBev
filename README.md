@@ -79,14 +79,14 @@ Local development values stay in `appsettings.Development.json`. Do not put prod
 
 The browser talks only to the Nuxt app. Nuxt holds the session in an HttpOnly cookie and calls the API with a server-side bearer token. Render and Vercel both terminate TLS.
 
-1. Create a Render Postgres database and a web service from `render.yaml` (Docker). The service needs a persistent disk so uploads and mailbox tokens survive restarts.
-2. Set `ConnectionStrings__DefaultConnection` to the Render Postgres URL and append `;SSL Mode=Require`.
+1. In Render, create a Blueprint from `render.yaml`. That creates Postgres and the API, with a disk for uploads and mailbox connections.
+2. Set `Seed__InitialPassword` to a first password of at least 8 characters with an uppercase letter, a lowercase letter, and a number. New accounts use it once and must change it. It is not written to a file. Tell staff that password out of band.
 3. Set `Cors__Origins__0` and `Email__PublicAppBaseUrl` to the Vercel URL, for example `https://your-app.vercel.app`.
-4. Copy Render's generated `Proxy__Secret` into the Vercel project as `NUXT_PROXY_SECRET`.
+4. Copy Render's generated `Proxy__Secret` into the Vercel project as `NUXT_PROXY_SECRET` (at least 32 characters, the same value on both sides).
 5. Set Vercel `NUXT_API_BASE` to the Render HTTPS URL, for example `https://pettycash-api.onrender.com`. Do not set `NUXT_PUBLIC_API_BASE`.
-6. On Vercel, set the root directory to `frontend` and use the existing Nuxt build (`npm run build`).
+6. On Vercel, set the root directory to `frontend`. The project includes `frontend/vercel.json`.
 
-`Jwt__Key` must be at least 32 bytes. If Render's generated value is rejected at startup, replace it with a longer random string. Production does not save temporary passwords to disk. Set each person's first password from a Development machine, or reset it before go-live, and ask them to change it at first sign-in.
+The API adds SSL to the Render database URL when that URL does not already require it. `Jwt__Key` must be at least 32 bytes. If Render's generated value is rejected at startup, replace it with a longer random string. Leave `Graph__TenantId`, `Graph__ClientId`, and `Graph__ClientSecret` empty until Microsoft 365 mail should send. People connect a mailbox again under Account after the first production sign-in.
 
 ### Microsoft Graph (leave routing)
 

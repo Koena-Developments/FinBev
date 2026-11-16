@@ -1,0 +1,846 @@
+{
+  "departments": [
+    "Chambers",
+    "Corporate Services",
+    "Executive",
+    "Finance",
+    "ICT",
+    "LPSP (Learning Programmes and Strategic Projects)",
+    "Learning Programmes",
+    "M&E (Monitoring & Evaluation)",
+    "Marketing and Communications",
+    "Office of the CEO",
+    "Operations",
+    "Quality Assurance",
+    "RPME (Research, Planning, Monitoring and Evaluation)",
+    "SCM (Supply Chain Management)",
+    "Stakeholder Relations"
+  ],
+  "staff": [
+    {
+      "department": "Chambers",
+      "fullName": "Osborne Mkhize",
+      "title": "Manager: Chambers",
+      "username": "osborne.mkhize"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Nozibongo Socishe",
+      "title": "Manager: Career Services and Outreach",
+      "username": "nozibongo.socishe"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Siphelele Zondo",
+      "title": "Administrator: OHS & Facilities",
+      "username": "siphelele.zondo"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Zimasa Baskiti",
+      "title": "Administrator: HR",
+      "username": "zimasa.baskiti"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Raymond Ramaru",
+      "title": "Officer: Marketing, Communications & Branding",
+      "username": "raymond.ramaru"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Dineo Mokgobi",
+      "title": "Administrator: Career Guidance",
+      "username": "dineo.mokgobi"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Medline Nkomo",
+      "title": "General Worker",
+      "username": "medline.nkomo"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Pretty Ngwasheng",
+      "title": "Senior Manager: Corporate Services",
+      "username": "pretty.ngwasheng"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Adelaide Thwala",
+      "title": "General Worker",
+      "username": "adelaide.thwala"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Lerato Phaka",
+      "title": "Manager: Risk & Compliance",
+      "username": "lerato.phaka"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Derrick Smith",
+      "title": "Manager: Human Resources and Facilities",
+      "username": "derrick.smith"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Sina Malefofane",
+      "title": "Receptionist",
+      "username": "sina.malefofane"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Legotsela Phaho",
+      "title": "General Worker",
+      "username": "legotsela.phaho"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Siphelele Shabalala",
+      "title": "Officer: Risk and Compliance",
+      "username": "siphelele.shabalala"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Melody Molale",
+      "title": "PR and Marketing Consultant",
+      "username": "melody.molale"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Andisiwe Cabane",
+      "title": "Officer: Risk and Compliance",
+      "username": "andisiwe.cabane"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Sihle Dube",
+      "title": "HR Business Partner",
+      "username": "sihle.dube"
+    },
+    {
+      "department": "Corporate Services",
+      "fullName": "Palesa Mphahlele",
+      "title": "Intern: Markerting and Communications",
+      "username": "palesa.mphahlele"
+    },
+    {
+      "department": "Executive",
+      "fullName": "Thandi Kunene",
+      "title": "Manager : Office of the CEO",
+      "username": "thandi.kunene"
+    },
+    {
+      "department": "Executive",
+      "fullName": "Sinnie Machebe",
+      "title": "Manager: Office of the CEO",
+      "username": "sinnie.machebe"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Mogopodi Pule",
+      "title": "Senior Manager: Finance",
+      "username": "mogopodi.pule"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Nomusa Maphanga",
+      "title": "Manager: Levies and Grants",
+      "username": "nomusa.maphanga"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Lunga Mokoena",
+      "title": "Coordinator: Supply Chain Management",
+      "username": "lunga.mokoena"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Phumlani Dladla",
+      "title": "Manager: Finance",
+      "username": "phumlani.dladla"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Magugu Maphiwa",
+      "title": "CFO",
+      "username": "magugu.maphiwa"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Kgothatso Maloma",
+      "title": "Administrator: Finance",
+      "username": "kgothatso.maloma"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Emmanuel Mafolo",
+      "title": "ICT Technician",
+      "username": "emmanuel.mafolo"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Ziyanda Mnisi",
+      "title": "Administrator: Supply Chain Management",
+      "username": "ziyanda.mnisi"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Tebogo Monare",
+      "title": "Coordinator: Finance",
+      "username": "tebogo.monare"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Busisiwe Ntuli",
+      "title": "Senior Administrative Officer: Office of the CFO",
+      "username": "busisiwe.ntuli"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Boitumelo Moripe",
+      "title": "Intern: Finance",
+      "username": "boitumelo.moripe"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Nosipho Dladla",
+      "title": "Manager: Supply Chain Management",
+      "username": "nosipho.dladla"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Ntsako Mgwena",
+      "title": "Manager: Information and Records Management Lead",
+      "username": "ntsako.mgwena"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Bafana Dhlamini CA(SA)",
+      "title": "Chief Financial Officer",
+      "username": "bafana.dhlaminicasa"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Mokgadi Moloto",
+      "title": "Intern: Grants",
+      "username": "mokgadi.moloto"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Modikwa Ramapulana",
+      "title": "Intern: Finance",
+      "username": "modikwa.ramapulana"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Gugulethu Khumalo",
+      "title": "Intern: Finance",
+      "username": "gugulethu.khumalo"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Desire Madingwane",
+      "title": "Intern: Finance",
+      "username": "desire.madingwane"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Tshenolo Lefutswe",
+      "title": "Chief Financial Officer",
+      "username": "tshenolo.lefutswe"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Bongani Nkabinde",
+      "title": "Senior Manager: ICT",
+      "username": "bongani.nkabinde"
+    },
+    {
+      "department": "ICT",
+      "fullName": "Thabang Motswenyane",
+      "title": "Intern: ICT",
+      "username": "thabang.motswenyane"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Ntsebeng Malebina",
+      "title": "Internal Auditor",
+      "username": "ntsebeng.malebina"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Gift Dube",
+      "title": "Internal Auditor",
+      "username": "gift.dube"
+    },
+    {
+      "department": "Finance",
+      "fullName": "George Zwane",
+      "title": "Internal Auditor",
+      "username": "george.zwane"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Keabetswe Mokolobate",
+      "title": "Internal Auditor",
+      "username": "keabetswe.mokolobate"
+    },
+    {
+      "department": "Finance",
+      "fullName": "Lunga Eric Jamda",
+      "title": "Internal Auditor",
+      "username": "lunga.ericjamda"
+    },
+    {
+      "department": "ICT",
+      "fullName": "Mpumelelo Qomiso",
+      "title": "Senior Manager: ICT",
+      "username": "mpumelelo.qomiso"
+    },
+    {
+      "department": "ICT",
+      "fullName": "Goitseona Mmope",
+      "title": "Officer: ICT",
+      "username": "goitseona.mmope"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Aluwani Ramoleta",
+      "title": "Coordinator: Learning Programmes",
+      "username": "aluwani.ramoleta"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Gcobani Gqangeni",
+      "title": "Coordinator: Learning Programmes",
+      "username": "gcobani.gqangeni"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Julia Ratopola",
+      "title": "Coordinator: Learning Programmes",
+      "username": "julia.ratopola"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Busisiwe Ngatsane",
+      "title": "Manager: Learning Programmes",
+      "username": "busisiwe.ngatsane"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Mandy Lirumo",
+      "title": "Coordinator: Learning Programmes",
+      "username": "mandy.lirumo"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Samuel Manamela",
+      "title": "Manager: Learning Programmes and Strategic Projects",
+      "username": "samuel.manamela"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Mashoro Malapela",
+      "title": "Coordinator: Learning Programmes",
+      "username": "mashoro.malapela"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Teboho Ngwane",
+      "title": "Administrator: Learning Programmes",
+      "username": "teboho.ngwane"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Kamogelo Chiloane",
+      "title": "Administrator: Learning Programmes",
+      "username": "kamogelo.chiloane"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Collin Mshayisa",
+      "title": "Coordinator: Learning Programmes",
+      "username": "collin.mshayisa"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Siboniso Nxumalo",
+      "title": "Administrator: Learning Programmes",
+      "username": "siboniso.nxumalo"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Heidi Foba",
+      "title": "Manager: Learning Programmes",
+      "username": "heidi.foba"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nonjabulo Sikhosana",
+      "title": "Administrator: Learning Programmes",
+      "username": "nonjabulo.sikhosana"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nyeleti Mashaba",
+      "title": "Administrator: Learning Programmes",
+      "username": "nyeleti.mashaba"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Boitshoko Shashape",
+      "title": "Administrator: Learning Programmes",
+      "username": "boitshoko.shashape"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Japhta Selwane",
+      "title": "Coordinator: Learning Programmes",
+      "username": "japhta.selwane"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Mondi Makhubu",
+      "title": "Administrator: Learning Programmes",
+      "username": "mondi.makhubu"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Zanele Sibanyoni",
+      "title": "Senior Manager: Learning Programmes and Strategic Projects",
+      "username": "zanele.sibanyoni"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nkosinathi Motshoene",
+      "title": "Intern: Learning Programmes",
+      "username": "nkosinathi.motshoene"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Muzwandile Shabalala",
+      "title": "Administrator: Learning Prograrmmes",
+      "username": "muzwandile.shabalala"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Mokgadi Machethe",
+      "title": "Intern",
+      "username": "mokgadi.machethe"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nhlonipho Macebele",
+      "title": "Intern: Learning Progrrammes",
+      "username": "nhlonipho.macebele"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nontombizakhe Duka",
+      "title": "Intern: Learning Programmes",
+      "username": "nontombizakhe.duka"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Matimu Mbavala",
+      "title": "Intern: Learning Programmes",
+      "username": "matimu.mbavala"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Tsholofelo Motlhabi",
+      "title": "Not Specified",
+      "username": "tsholofelo.motlhabi"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Chantel Manetje",
+      "title": "Intern: Learning Programmes",
+      "username": "chantel.manetje"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Mpho Moyo",
+      "title": "Intern: Learning Programmes",
+      "username": "mpho.moyo"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Joyce Sebokana",
+      "title": "Intern: Learning Programmes",
+      "username": "joyce.sebokana"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Nkele Moketwa",
+      "title": "Intern: Learning Programmes",
+      "username": "nkele.moketwa"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Jesica Nkawane",
+      "title": "Intern: Learning Programmes",
+      "username": "jesica.nkawane"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Pertunia Malema",
+      "title": "Intern: Learning Programmes",
+      "username": "pertunia.malema"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Lebogang Masemola",
+      "title": "Intern: Learning Programmes",
+      "username": "lebogang.masemola"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Tsikani Baloyi",
+      "title": "Intern: Learning Programmes",
+      "username": "tsikani.baloyi"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Dinah Raphahlela",
+      "title": "Intern: Learning programmes",
+      "username": "dinah.raphahlela"
+    },
+    {
+      "department": "LPSP (Learning Programmes and Strategic Projects)",
+      "fullName": "Khothatso Mabizela",
+      "title": "Intern: Learning Programmes",
+      "username": "khothatso.mabizela"
+    },
+    {
+      "department": "Learning Programmes",
+      "fullName": "Kevin Murembiwa",
+      "title": "Intern: Learning Programmes",
+      "username": "kevin.murembiwa"
+    },
+    {
+      "department": "Learning Programmes",
+      "fullName": "Bandile Gina",
+      "title": "Intern: Learning Programmes",
+      "username": "bandile.gina"
+    },
+    {
+      "department": "M&E (Monitoring & Evaluation)",
+      "fullName": "Mavhungu Bologo",
+      "title": "Administrator: Monitoring and Evaluation",
+      "username": "mavhungu.bologo"
+    },
+    {
+      "department": "M&E (Monitoring & Evaluation)",
+      "fullName": "Victor Mpofu",
+      "title": "Administrator: M&E",
+      "username": "victor.mpofu"
+    },
+    {
+      "department": "M&E (Monitoring & Evaluation)",
+      "fullName": "Samukelisiwe Phungula",
+      "title": "Manager: Monitoring, Evaluation and Reporting",
+      "username": "samukelisiwe.phungula"
+    },
+    {
+      "department": "Marketing and Communications",
+      "fullName": "Thobile Mbhele",
+      "title": "Intern: Learning Programmes",
+      "username": "thobile.mbhele"
+    },
+    {
+      "department": "Office of the CEO",
+      "fullName": "Nokuthula Selamolela",
+      "title": "Chief Executive Officer",
+      "username": "nokuthula.selamolela"
+    },
+    {
+      "department": "Office of the CEO",
+      "fullName": "Caroline Gamede",
+      "title": "Senior Administrative Officer: Office of the CEO",
+      "username": "caroline.gamede"
+    },
+    {
+      "department": "Office of the CEO",
+      "fullName": "Fadzai Dhlamini",
+      "title": "Manager: Office of the CEO",
+      "username": "fadzai.dhlamini"
+    },
+    {
+      "department": "Office of the CEO",
+      "fullName": "Blessing Mufamadi",
+      "title": "Intern: Office of the CEO",
+      "username": "blessing.mufamadi"
+    },
+    {
+      "department": "Office of the CEO",
+      "fullName": "Phumelele Mntambo",
+      "title": "Board Secretary",
+      "username": "phumelele.mntambo"
+    },
+    {
+      "department": "Operations",
+      "fullName": "Sinaye Mgidi",
+      "title": "General Manager: Operations",
+      "username": "sinaye.mgidi"
+    },
+    {
+      "department": "Operations",
+      "fullName": "Alpheus Lediga",
+      "title": "Admin Operations Intern: Office of the GM",
+      "username": "alpheus.lediga"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Charmaine Refiloe Ditshego",
+      "title": "Administrator: Quality Assurance",
+      "username": "charmaine.refiloeditshego"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Bigfish Mashau",
+      "title": "Coordinator: Quality Assurance",
+      "username": "bigfish.mashau"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Llewellin van Zyl",
+      "title": "Manager: Quality Assurance",
+      "username": "llewellin.vanzyl"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Ntokozo Shezi",
+      "title": "Administrator: Quality Assurance",
+      "username": "ntokozo.shezi"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Thabang Madihlaba",
+      "title": "Administrator: Quality Assurance",
+      "username": "thabang.madihlaba"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Thabiso Chokobane",
+      "title": "Administrator: Quality Assurance",
+      "username": "thabiso.chokobane"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Tebogo Maaneke",
+      "title": "Administrator: Quality Assurance",
+      "username": "tebogo.maaneke"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Thulani Makhathini",
+      "title": "Coordinator: Quality Assurance",
+      "username": "thulani.makhathini"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Ntokozo Lwandle",
+      "title": "Senior Manager: Quality Assurance",
+      "username": "ntokozo.lwandle"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Nokwanda Myeni",
+      "title": "Intern: Quality Assurance",
+      "username": "nokwanda.myeni"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Winile Makamo",
+      "title": "Temp Administrator: Quality Assurance",
+      "username": "winile.makamo"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Sinethemba Nzama",
+      "title": "Administrator: Quality Assurance",
+      "username": "sinethemba.nzama"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Nondumiso Mpontshane",
+      "title": "Intern: Quality Assurance",
+      "username": "nondumiso.mpontshane"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Kimberley Rowan",
+      "title": "Manager: Quality Assurance Assessments",
+      "username": "kimberley.rowan"
+    },
+    {
+      "department": "Quality Assurance",
+      "fullName": "Zimkhitha Juqu",
+      "title": "Manager: Quality Assurance Assessments",
+      "username": "zimkhitha.juqu"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Lebo Thwala",
+      "title": "Researcher",
+      "username": "lebo.thwala"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Afika Nota",
+      "title": "Coordinator: Monitoring and Evaluation",
+      "username": "afika.nota"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Popopo Mohlala",
+      "title": "Researcher",
+      "username": "popopo.mohlala"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Thuli Sibia",
+      "title": "Senior Manager: Research, Planning, Monitoring and Evaluation",
+      "username": "thuli.sibia"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Vuyolwethu Madyaka",
+      "title": "Manager: Monitoring, Evaluation and Reporting",
+      "username": "vuyolwethu.madyaka"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Nkgaugelo Kgasago",
+      "title": "Manager: Research and Skills Planning",
+      "username": "nkgaugelo.kgasago"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Nosibusiso Mbatha",
+      "title": "Administrator: Monitoring and Evaluation SETMIS",
+      "username": "nosibusiso.mbatha"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Nomfundo Sibiya",
+      "title": "Administrator: Monitoring and Evaluation",
+      "username": "nomfundo.sibiya"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Tebatso Ramafemo",
+      "title": "Administrator: Monitoring and Evaluation",
+      "username": "tebatso.ramafemo"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Sanele Khakhu",
+      "title": "Intern: Research and Planning",
+      "username": "sanele.khakhu"
+    },
+    {
+      "department": "RPME (Research, Planning, Monitoring and Evaluation)",
+      "fullName": "Duduzile Zungu",
+      "title": "Coordinator: M&E",
+      "username": "duduzile.zungu"
+    },
+    {
+      "department": "SCM (Supply Chain Management)",
+      "fullName": "Katleho Mashego",
+      "title": "Manager: SCM",
+      "username": "katleho.mashego"
+    },
+    {
+      "department": "Stakeholder Relations",
+      "fullName": "Telavukosi Hlongwane",
+      "title": "Coordinator: Chambers",
+      "username": "telavukosi.hlongwane"
+    },
+    {
+      "department": "Stakeholder Relations",
+      "fullName": "Makatseng Mokome",
+      "title": "Senior Manager: Stakeholder Relations",
+      "username": "makatseng.mokome"
+    },
+    {
+      "department": "Stakeholder Relations",
+      "fullName": "Corie Anderson",
+      "title": "Administrator: Stakeholder Relations",
+      "username": "corie.anderson"
+    },
+    {
+      "department": "Stakeholder Relations",
+      "fullName": "Kagiso Mojela",
+      "title": "Intern: Stakeholder Relations",
+      "username": "kagiso.mojela"
+    }
+  ],
+  "approvalMatrix": {
+    "Chambers": {
+      "primary": "osborne.mkhize",
+      "acting": null
+    },
+    "Corporate Services": {
+      "primary": "pretty.ngwasheng",
+      "acting": "derrick.smith"
+    },
+    "Executive": {
+      "primary": "thandi.kunene",
+      "acting": "sinnie.machebe"
+    },
+    "Finance": {
+      "primary": "mogopodi.pule",
+      "acting": "phumlani.dladla"
+    },
+    "ICT": {
+      "primary": "mpumelelo.qomiso",
+      "acting": "goitseona.mmope"
+    },
+    "LPSP (Learning Programmes and Strategic Projects)": {
+      "primary": "zanele.sibanyoni",
+      "acting": "samuel.manamela"
+    },
+    "Learning Programmes": {
+      "primary": "zanele.sibanyoni",
+      "acting": "samuel.manamela"
+    },
+    "M&E (Monitoring & Evaluation)": {
+      "primary": "samukelisiwe.phungula",
+      "acting": null
+    },
+    "Marketing and Communications": {
+      "primary": "pretty.ngwasheng",
+      "acting": "derrick.smith"
+    },
+    "Office of the CEO": {
+      "primary": "nokuthula.selamolela",
+      "acting": "fadzai.dhlamini"
+    },
+    "Operations": {
+      "primary": "sinaye.mgidi",
+      "acting": null
+    },
+    "Quality Assurance": {
+      "primary": "ntokozo.lwandle",
+      "acting": "llewellin.vanzyl"
+    },
+    "RPME (Research, Planning, Monitoring and Evaluation)": {
+      "primary": "thuli.sibia",
+      "acting": "vuyolwethu.madyaka"
+    },
+    "SCM (Supply Chain Management)": {
+      "primary": "katleho.mashego",
+      "acting": "nosipho.dladla"
+    },
+    "Stakeholder Relations": {
+      "primary": "makatseng.mokome",
+      "acting": "telavukosi.hlongwane"
+    }
+  },
+  "adminUsername": "mogopodi.pule"
+}

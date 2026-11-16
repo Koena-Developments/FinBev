@@ -1,0 +1,393 @@
+@config "../../../tailwind.config.js";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --fb-bg: #f4f8fc;
+    --fb-surface: #ffffff;
+    --fb-surface-2: #f4f8fc;
+    --fb-surface-3: #e8f0fa;
+    --fb-text: #0f172a;
+    --fb-text-muted: #64748b;
+    --fb-border: #e8f0fa;
+    --fb-accent: #3d6eb5;
+    --fb-gauge-track: #e8f0fa;
+    color-scheme: light;
+  }
+
+  html.dark {
+    --fb-bg: #0e1a30;
+    --fb-surface: #162844;
+    --fb-surface-2: #1d3358;
+    --fb-surface-3: #274270;
+    --fb-text: #e7eef8;
+    --fb-text-muted: #9eb0cc;
+    --fb-border: rgba(158, 197, 239, 0.22);
+    --fb-accent: #9ec5ef;
+    --fb-gauge-track: #274270;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--fb-bg);
+    color: var(--fb-text);
+  }
+}
+
+@layer components {
+  .emoji-font {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", emoji, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .btn-foodbev {
+    @apply rounded-lg bg-foodbev-sky px-4 py-2 text-sm font-semibold text-white transition hover:bg-foodbev-sky-light;
+  }
+
+  .btn-foodbev-lg {
+    @apply rounded-xl bg-foodbev-sky px-4 py-3 text-sm font-bold tracking-wide text-white transition hover:bg-foodbev-sky-light;
+  }
+
+  .link-foodbev {
+    color: #1a4080;
+  }
+
+  .link-foodbev:hover {
+    color: #3d6eb5;
+  }
+
+  .card-foodbev {
+    border-radius: 1rem;
+    border: 1px solid var(--fb-border);
+    background: var(--fb-surface);
+    box-shadow: 0 1px 2px rgba(26, 64, 128, 0.06);
+  }
+
+  .input-foodbev {
+    margin-top: 0.25rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--fb-border);
+    background: var(--fb-surface);
+    padding: 0.5rem 0.75rem;
+    color: var(--fb-text);
+  }
+
+  .input-foodbev:focus {
+    border-color: #3d6eb5;
+    outline: none;
+    box-shadow: 0 0 0 1px #3d6eb5;
+  }
+
+  .table-head-foodbev {
+    background: var(--fb-surface-3);
+    text-align: left;
+    color: var(--fb-text);
+  }
+
+  .btn-foodbev-outline {
+    border-radius: 0.5rem;
+    border: 1px solid var(--fb-border);
+    background: var(--fb-surface);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--fb-text);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .btn-foodbev-outline:hover {
+    border-color: #3d6eb5;
+    color: var(--fb-accent);
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    height: 2.5rem;
+    width: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 1px solid var(--fb-border);
+    background: transparent;
+    color: var(--fb-text-muted);
+    cursor: pointer;
+  }
+
+  .theme-toggle:hover {
+    background: var(--fb-surface-2);
+    color: var(--fb-text);
+  }
+
+  .theme-toggle svg {
+    height: 1.15rem;
+    width: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .theme-toggle__sun {
+    display: none;
+  }
+
+  .theme-toggle--on-gradient {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  .theme-toggle--on-gradient:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: #fff;
+  }
+}
+
+html.dark .theme-toggle__moon {
+  display: none;
+}
+
+html.dark .theme-toggle__sun {
+  display: block;
+}
+
+html.dark .bg-foodbev-navy-dark .theme-toggle {
+  border-color: rgba(158, 197, 239, 0.28);
+  color: #9ec5ef;
+}
+
+html.dark .bg-foodbev-navy-dark .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+html.dark .bg-white,
+html.dark .hover\:bg-white:hover {
+  background-color: var(--fb-surface);
+}
+
+html.dark .bg-foodbev-paper,
+html.dark .hover\:bg-foodbev-paper:hover,
+html.dark .hover\:bg-foodbev-paper\/80:hover,
+html.dark .hover\:bg-foodbev-paper\/50:hover {
+  background-color: var(--fb-bg);
+}
+
+html.dark .hover\:bg-foodbev-paper:hover,
+html.dark .hover\:bg-foodbev-paper\/80:hover,
+html.dark .hover\:bg-foodbev-paper\/50:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-\[\#fcfcfe\]:hover {
+  background-color: rgba(158, 197, 239, 0.1);
+}
+
+html.dark .bg-foodbev-mist,
+html.dark .bg-foodbev-mist\/50,
+html.dark .bg-foodbev-mist\/80,
+html.dark .hover\:bg-foodbev-mist:hover,
+html.dark .bg-foodbev-sky\/10,
+html.dark .bg-sky-100 {
+  background-color: rgba(77, 143, 209, 0.18);
+}
+
+html.dark .bg-foodbev-ice {
+  background-color: var(--fb-surface-3);
+}
+
+html.dark .input-foodbev,
+html.dark select,
+html.dark textarea,
+html.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='button']):not([type='submit']) {
+  background-color: var(--fb-surface-2);
+  color: var(--fb-text);
+  border-color: var(--fb-border);
+}
+
+html.dark .bg-foodbev-navy-dark {
+  background-color: #0c1830;
+  box-shadow: inset -1px 0 0 rgba(158, 197, 239, 0.16);
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-\[\#f6f7fb\],
+html.dark .bg-\[\#eef0ff\],
+html.dark .bg-\[\#eef1f6\],
+html.dark .bg-\[\#eef2ff\],
+html.dark .bg-\[\#fcfcfe\] {
+  background-color: var(--fb-surface-2);
+}
+
+html.dark .bg-\[\#5458f2\] {
+  background-color: #3d6eb5;
+}
+
+html.dark .hover\:bg-\[\#4548e0\]:hover {
+  background-color: #1a4080;
+}
+
+html.dark .bg-red-100,
+html.dark .bg-\[\#fdecee\],
+html.dark .bg-\[\#ffe4e6\] {
+  background-color: rgba(225, 29, 72, 0.16);
+}
+
+html.dark .bg-amber-100,
+html.dark .bg-\[\#fff4e5\],
+html.dark .bg-\[\#fef3c7\],
+html.dark .bg-\[\#ffedd5\] {
+  background-color: rgba(217, 119, 6, 0.18);
+}
+
+html.dark .bg-\[\#e7f8ef\],
+html.dark .bg-\[\#dcfce7\] {
+  background-color: rgba(21, 150, 106, 0.18);
+}
+
+html.dark .bg-\[\#e8f3ff\],
+html.dark .bg-\[\#e0f2fe\],
+html.dark .bg-\[\#dbeafe\] {
+  background-color: rgba(61, 110, 181, 0.22);
+}
+
+html.dark .bg-\[\#f3e8ff\],
+html.dark .bg-\[\#ede9fe\] {
+  background-color: rgba(109, 40, 217, 0.2);
+}
+
+html.dark .bg-\[\#fce7f3\] {
+  background-color: rgba(219, 39, 119, 0.18);
+}
+
+html.dark .text-foodbev-navy,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-\[\#1e2430\],
+html.dark .hover\:text-foodbev-navy:hover,
+html.dark .hover\:text-gray-700:hover {
+  color: var(--fb-text);
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .text-\[\#98a2b3\],
+html.dark .text-\[\#b0b7c3\] {
+  color: var(--fb-text-muted);
+}
+
+html.dark .text-foodbev-blue,
+html.dark .text-foodbev-sky,
+html.dark .text-\[\#5458f2\],
+html.dark .hover\:text-foodbev-blue:hover {
+  color: #c5ddf7;
+}
+
+html.dark .text-red-600,
+html.dark .text-red-700,
+html.dark .text-\[\#e11d48\],
+html.dark .text-\[\#be123c\] {
+  color: #fecdd3;
+}
+
+html.dark .text-amber-800,
+html.dark .text-\[\#d97706\],
+html.dark .text-\[\#b45309\],
+html.dark .text-\[\#c2410c\] {
+  color: #fde68a;
+}
+
+html.dark .text-\[\#15966a\],
+html.dark .text-\[\#16a34a\],
+html.dark .text-\[\#15803d\] {
+  color: #bbf7d0;
+}
+
+html.dark .text-\[\#3b82f6\],
+html.dark .text-\[\#1d4ed8\],
+html.dark .text-\[\#0284c7\] {
+  color: #dbeafe;
+}
+
+html.dark .text-\[\#7c3aed\],
+html.dark .text-\[\#6d28d9\] {
+  color: #e9d5ff;
+}
+
+html.dark .text-\[\#db2777\] {
+  color: #fbcfe8;
+}
+
+html.dark .border-foodbev-mist,
+html.dark .border-foodbev-mist\/60,
+html.dark .border-slate-200,
+html.dark .border-gray-200,
+html.dark .border-\[\#e6e8ef\],
+html.dark .border-\[\#eef0f4\],
+html.dark .border-\[\#eef1f6\],
+html.dark .border-\[\#e5e7eb\],
+html.dark .hover\:border-\[\#e3e7ef\]:hover {
+  border-color: var(--fb-border);
+}
+
+html.dark .border-\[\#5458f2\],
+html.dark .border-\[\#c7c9f8\],
+html.dark .focus\:border-\[\#c7c9f8\]:focus {
+  border-color: #5b9fd4;
+}
+
+html.dark .divide-foodbev-mist > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--fb-border);
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--fb-text-muted);
+}
+
+html.dark img.brand-logo {
+  border-radius: 10px;
+  background: #f4f8fc;
+  padding: 6px 8px;
+}
+
+html.dark .petty-cash-form-official {
+  background: #fff !important;
+  color: #111 !important;
+}
+
+html.dark .petty-cash-form-official,
+html.dark .petty-cash-form-official * {
+  color: #111;
+}
+
+html.dark .signature-sheet {
+  background: #fff !important;
+}
+
+@media print {
+  html.dark {
+    color-scheme: light;
+  }
+
+  html.dark body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+}

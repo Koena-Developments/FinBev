@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PettyCash.Api/PettyCash.Api.csproj" />
+    <Project Path="src/PettyCash.Application/PettyCash.Application.csproj" />
+    <Project Path="src/PettyCash.Domain/PettyCash.Domain.csproj" />
+    <Project Path="src/PettyCash.Infrastructure/PettyCash.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PettyCash.Tests/PettyCash.Tests.csproj" />
+  </Folder>
+</Solution>

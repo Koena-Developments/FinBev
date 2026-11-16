@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pettycash-postgres
+    environment:
+      POSTGRES_USER: pettycash
+      POSTGRES_PASSWORD: pettycash_dev
+      POSTGRES_DB: pettycash
+    ports:
+      - "5433:5432"
+    volumes:
+      - pettycash_pgdata:/var/lib/postgresql/data
+
+volumes:
+  pettycash_pgdata:

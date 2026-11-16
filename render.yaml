@@ -1,0 +1,51 @@
+# Render blueprint: Postgres plus the Petty Cash API.
+# TLS stops at Render. The container listens on HTTP and trusts X-Forwarded-Proto.
+# After the first deploy, copy Proxy__Secret into Vercel as NUXT_PROXY_SECRET.
+databases:
+  - name: pettycash-db
+    databaseName: pettycash
+    user: pettycash
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: pettycash-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    plan: starter
+    disk:
+      name: pettycash-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Secrets__Directory
+        value: /var/data/secrets
+      - key: Jwt__Issuer
+        value: PettyCash
+      - key: Jwt__Audience
+        value: PettyCash
+      - key: Jwt__Key
+        generateValue: true
+      - key: Proxy__Secret
+        generateValue: true
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: pettycash-db
+          property: connectionString
+      - key: Cors__Origins__0
+        sync: false
+      - key: Email__PublicAppBaseUrl
+        sync: false
+      - key: Seed__InitialPassword
+        sync: false
+      - key: Graph__TenantId
+        sync: false
+      - key: Graph__ClientId
+        sync: false
+      - key: Graph__ClientSecret
+        sync: false
