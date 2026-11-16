@@ -10,6 +10,8 @@ public sealed record LoginResponse(
 
 public sealed record ChangePasswordRequest(string? Username, string CurrentPassword, string NewPassword, string? Email = null);
 
+public sealed record ResetPasswordRequest(string? Email, string NewPassword);
+
 public sealed record MeResponse(
     string UserId,
     string Username,

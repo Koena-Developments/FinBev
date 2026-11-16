@@ -3,7 +3,7 @@ using PettyCash.Application.Abstractions;
 
 namespace PettyCash.Infrastructure.Email;
 
-/// <summary>Development fallback when SMTP is not configured.</summary>
+/// <summary>Production fallback when SMTP and Graph are not configured. Nothing is written to disk.</summary>
 public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender
 {
     public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)

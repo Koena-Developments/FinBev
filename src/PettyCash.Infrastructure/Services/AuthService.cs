@@ -85,6 +85,36 @@ public class AuthService(
         return new LoginResponse(true, false, token, null);
     }
 
+    public async Task<LoginResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await FindByEmailAsync(request.Email, null, cancellationToken);
+        if (user is null)
+        {
+            return new LoginResponse(false, false, null, "We could not find an account with that email.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return new LoginResponse(false, false, null, ClientErrors.PasswordRules);
+        }
+
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            return new LoginResponse(false, false, null, ClientErrors.ForIdentityCodes(result.Errors.Select(e => e.Code)));
+        }
+
+        user.MustChangePassword = false;
+        await userManager.UpdateAsync(user);
+        await userManager.SetLockoutEndDateAsync(user, null);
+        await userManager.ResetAccessFailedCountAsync(user);
+
+        var roles = await userManager.GetRolesAsync(user);
+        var token = tokenService.CreateToken(user.Id, user.UserName!, roles);
+        return new LoginResponse(true, false, token, null);
+    }
+
     private async Task<AppUser?> FindByEmailAsync(string? email, string? username, CancellationToken cancellationToken)
     {
         var identifier = FirstSignIn(email, username);

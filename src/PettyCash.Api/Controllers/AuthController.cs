@@ -30,6 +30,15 @@ public class AuthController(IAuthService authService, ICurrentUser currentUser, 
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<LoginResponse>> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.ResetPasswordAsync(request, cancellationToken);
+        return Ok(IssueSession(result));
+    }
+
+    [AllowAnonymous]
     [HttpPost("logout")]
     public IActionResult Logout()
     {

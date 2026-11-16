@@ -24,6 +24,7 @@ export function useApi() {
       const isPublicAuth =
         path.endsWith('/api/auth/login') ||
         path.endsWith('/api/auth/change-password') ||
+        path.endsWith('/api/auth/reset-password') ||
         path.endsWith('/api/auth/logout')
       const sessionProbe = path.endsWith('/api/auth/me')
       if (response.status === 401 && import.meta.client && !isPublicAuth && !sessionProbe && token.value) {

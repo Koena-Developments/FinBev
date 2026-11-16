@@ -15,8 +15,11 @@ const EMAIL_HINT_KEY = 'pettycash_last_email'
 
 const email = ref('')
 const password = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
+const resetting = ref(false)
 const error = ref('')
 const submitting = ref(false)
 const { markSignedIn } = useAuth()
@@ -30,7 +33,49 @@ if (import.meta.client) {
   }
 }
 
+function showReset() {
+  resetting.value = true
+  error.value = ''
+  password.value = ''
+}
+
+function showSignIn() {
+  resetting.value = false
+  error.value = ''
+  newPassword.value = ''
+  confirmPassword.value = ''
+}
+
+async function resetPassword() {
+  error.value = ''
+  if (newPassword.value !== confirmPassword.value) {
+    error.value = 'The two passwords do not match.'
+    return
+  }
+  submitting.value = true
+  try {
+    const result = await api<{ success: boolean; token: string | null; message: string | null }>(
+      '/api/auth/reset-password',
+      { method: 'POST', body: JSON.stringify({ email: email.value.trim(), newPassword: newPassword.value }) }
+    )
+    if (!result.success) {
+      error.value = result.message || 'We could not reset your password. Try again.'
+      return
+    }
+    markSignedIn()
+    await navigateTo('/')
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'We could not reset your password. Try again.'
+  } finally {
+    submitting.value = false
+  }
+}
+
 async function submit() {
+  if (resetting.value) {
+    await resetPassword()
+    return
+  }
   error.value = ''
   submitting.value = true
   try {
@@ -81,8 +126,8 @@ async function submit() {
             <ThemeToggle />
           </div>
           <img src="/images/foodbev-logo.png" alt="FoodBev Manufacturing SETA" class="finbev-logo" />
-          <h2>Sign in</h2>
-          <p class="finbev-form__lead">Welcome back to FinBev</p>
+          <h2>{{ resetting ? 'Reset password' : 'Sign in' }}</h2>
+          <p class="finbev-form__lead">{{ resetting ? 'Choose a new password for your work email.' : 'Welcome back to FinBev' }}</p>
 
           <label class="finbev-field" for="email">
             Email
@@ -102,7 +147,7 @@ async function submit() {
             </span>
           </label>
 
-          <label class="finbev-field" for="password">
+          <label v-if="!resetting" class="finbev-field" for="password">
             Password
             <span class="finbev-field__control">
               <input
@@ -122,18 +167,54 @@ async function submit() {
             </span>
           </label>
 
+          <template v-if="resetting">
+            <label class="finbev-field" for="new-password">
+              New password
+              <span class="finbev-field__control">
+                <input
+                  id="new-password"
+                  v-model="newPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="At least 8 characters"
+                  required
+                />
+                <button type="button" class="finbev-eye" :aria-pressed="showPassword" aria-label="Show password" @click="showPassword = !showPassword">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2.5 12S6.2 6.5 12 6.5 21.5 12 21.5 12 17.8 17.5 12 17.5 2.5 12 2.5 12Z" />
+                    <circle cx="12" cy="12" r="2.6" />
+                  </svg>
+                </button>
+              </span>
+            </label>
+            <label class="finbev-field" for="confirm-password">
+              Confirm password
+              <span class="finbev-field__control">
+                <input
+                  id="confirm-password"
+                  v-model="confirmPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Type it again"
+                  required
+                />
+              </span>
+            </label>
+          </template>
+
           <div class="finbev-row">
-            <label class="finbev-check">
+            <label v-if="!resetting" class="finbev-check">
               <input v-model="rememberMe" type="checkbox" />
               Remember me
             </label>
-            <a href="mailto:info@foodbev.co.za?subject=FinBev%20password%20help">Recover password</a>
+            <button v-if="resetting" type="button" class="finbev-link" @click="showSignIn">Back to sign in</button>
+            <button v-else type="button" class="finbev-link" @click="showReset">Reset password</button>
           </div>
 
           <p v-if="error" class="finbev-error" role="alert">{{ error }}</p>
 
           <button type="submit" class="finbev-submit" :disabled="submitting">
-            {{ submitting ? 'Signing in…' : 'Sign in' }}
+            {{ submitting ? (resetting ? 'Saving…' : 'Signing in…') : (resetting ? 'Save new password' : 'Sign in') }}
           </button>
         </form>
       </section>
@@ -346,13 +427,19 @@ async function submit() {
   accent-color: var(--fb-blue);
 }
 
-.finbev-row a {
+.finbev-link {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--fb-blue);
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
-  text-decoration: none;
+  cursor: pointer;
 }
 
-.finbev-row a:hover {
+.finbev-link:hover {
   text-decoration: underline;
 }
 

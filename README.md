@@ -108,7 +108,7 @@ When SMTP is enabled, the app sends updates at each workflow step:
 | Finance SM approves | Requester |
 | Rejected | Requester |
 
-Configure `Email` with environment variables or **user secrets**. Until SMTP or Graph is enabled, messages are **not** delivered to inboxes — they are saved as `.eml` files under `secrets/email-outbox` (open in Outlook to preview).
+Configure `Email` with environment variables or **user secrets**. In Development, until SMTP or Graph is enabled, messages are saved as `.eml` files under `secrets/email-outbox` (open in Outlook to preview). In production those messages are not written to disk and are not delivered until SMTP or Graph is set.
 
 **Option A — Office 365 SMTP (simplest for pilot)**
 
@@ -131,7 +131,7 @@ Use `RedirectAllTo` in dev to capture all mail in one inbox. `PublicAppBaseUrl` 
 
 Recipients use `EntraUpn` when set, otherwise FoodBev format **`{firstname}{firstLetterOfSurname}@foodbev.co.za`** from the portal username (`firstname.surname`), e.g. `mpumelelo.qomiso` → `mpumeleloq@foodbev.co.za`. Exceptions go in `Email:AddressOverrides` (e.g. `thabang.motswenyane` → `thabang@foodbev.co.za`).
 
-`RedirectAllTo` is empty, so each notification is addressed to that person’s own mailbox. Set it only when you want every message copied to one inbox for a test. Without SMTP or Graph, copies still land in **`secrets/email-outbox`** as `.eml` files.
+`RedirectAllTo` is empty, so each notification is addressed to that person’s own mailbox. Set it only when you want every message copied to one inbox for a test. Without SMTP or Graph, Development saves copies as `.eml` files in `secrets/email-outbox`. Production does not write those files.
 
 ## Build while the API is running
 
@@ -158,5 +158,3 @@ dotnet test
 - `src/PettyCash.Api` — HTTP API
 - `frontend` — Nuxt 3 portal
 - `tests/PettyCash.Tests` — policy, float, and routing tests
-#   F i n B e v  
- 
