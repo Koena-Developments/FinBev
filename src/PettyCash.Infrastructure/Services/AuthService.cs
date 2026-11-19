@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +9,7 @@ using PettyCash.Application.Common;
 using PettyCash.Application.Dtos;
 using PettyCash.Application.Options;
 using PettyCash.Domain.Entities;
+using PettyCash.Infrastructure.Email;
 using PettyCash.Infrastructure.Graph;
 using PettyCash.Infrastructure.Persistence;
 
@@ -18,7 +21,8 @@ public class AuthService(
     ITokenService tokenService,
     GraphMailboxTokenProvider graphMailboxTokens,
     IOptions<EmailOptions> emailOptions,
-    IConfiguration configuration) : IAuthService
+    IConfiguration configuration,
+    PasswordResetMailer resetMailer) : IAuthService
 {
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
@@ -85,12 +89,71 @@ public class AuthService(
         return new LoginResponse(true, false, token, null);
     }
 
-    public async Task<LoginResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+    public async Task<ForgotPasswordResponse> SendResetCodeAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
+        const string sent = "If that email belongs to a staff account, we sent a 4-digit code. It expires in 15 minutes.";
         var user = await FindByEmailAsync(request.Email, null, cancellationToken);
         if (user is null)
         {
-            return new LoginResponse(false, false, null, "We could not find an account with that email.");
+            return new ForgotPasswordResponse(true, sent);
+        }
+
+        if (user.PasswordResetCodeAttempts >= 5
+            && user.PasswordResetCodeExpiresUtc is DateTime lockedUntil
+            && lockedUntil > DateTime.UtcNow)
+        {
+            return new ForgotPasswordResponse(false, "Too many tries. Wait 15 minutes, then request a new code.");
+        }
+
+        if (user.PasswordResetCodeExpiresUtc is DateTime alreadySent
+            && alreadySent > DateTime.UtcNow.AddMinutes(14)
+            && !string.IsNullOrWhiteSpace(user.PasswordResetCodeHash))
+        {
+            return new ForgotPasswordResponse(true, sent);
+        }
+
+        var attempts = user.PasswordResetCodeExpiresUtc > DateTime.UtcNow
+            ? user.PasswordResetCodeAttempts
+            : 0;
+        var code = RandomNumberGenerator.GetInt32(0, 10000).ToString("D4");
+        user.PasswordResetCodeHash = HashResetCode(user.Id, code);
+        user.PasswordResetCodeExpiresUtc = DateTime.UtcNow.AddMinutes(15);
+        user.PasswordResetCodeAttempts = attempts;
+        await userManager.UpdateAsync(user);
+
+        try
+        {
+            await resetMailer.SendCodeAsync(user.Email ?? request.Email!.Trim(), user.DisplayName, code, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            user.PasswordResetCodeHash = null;
+            user.PasswordResetCodeExpiresUtc = null;
+            user.PasswordResetCodeAttempts = 0;
+            await userManager.UpdateAsync(user);
+            return new ForgotPasswordResponse(false, ClientErrors.ForException(ex));
+        }
+
+        return new ForgotPasswordResponse(true, sent);
+    }
+
+    public async Task<LoginResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await FindByEmailAsync(request.Email, null, cancellationToken);
+        if (user is null || !IsResetCodeValid(user, request.Code))
+        {
+            if (user is not null && !string.IsNullOrWhiteSpace(user.PasswordResetCodeHash))
+            {
+                user.PasswordResetCodeAttempts++;
+                if (user.PasswordResetCodeAttempts >= 5)
+                {
+                    user.PasswordResetCodeHash = null;
+                }
+
+                await userManager.UpdateAsync(user);
+            }
+
+            return new LoginResponse(false, false, null, "That code is not valid. Request a new one.");
         }
 
         if (string.IsNullOrWhiteSpace(request.NewPassword))
@@ -106,6 +169,9 @@ public class AuthService(
         }
 
         user.MustChangePassword = false;
+        user.PasswordResetCodeHash = null;
+        user.PasswordResetCodeExpiresUtc = null;
+        user.PasswordResetCodeAttempts = 0;
         await userManager.UpdateAsync(user);
         await userManager.SetLockoutEndDateAsync(user, null);
         await userManager.ResetAccessFailedCountAsync(user);
@@ -113,6 +179,32 @@ public class AuthService(
         var roles = await userManager.GetRolesAsync(user);
         var token = tokenService.CreateToken(user.Id, user.UserName!, roles);
         return new LoginResponse(true, false, token, null);
+    }
+
+    private static bool IsResetCodeValid(AppUser user, string? code)
+    {
+        if (string.IsNullOrWhiteSpace(user.PasswordResetCodeHash)
+            || user.PasswordResetCodeExpiresUtc is null
+            || user.PasswordResetCodeExpiresUtc <= DateTime.UtcNow
+            || user.PasswordResetCodeAttempts >= 5)
+        {
+            return false;
+        }
+
+        var digits = new string((code ?? "").Where(char.IsDigit).ToArray());
+        if (digits.Length != 4)
+        {
+            return false;
+        }
+
+        var expected = Convert.FromHexString(user.PasswordResetCodeHash);
+        var actual = SHA256.HashData(Encoding.UTF8.GetBytes($"{user.Id}:{digits}"));
+        return CryptographicOperations.FixedTimeEquals(expected, actual);
+    }
+
+    private static string HashResetCode(string userId, string code)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{userId}:{code}")));
     }
 
     private async Task<AppUser?> FindByEmailAsync(string? email, string? username, CancellationToken cancellationToken)

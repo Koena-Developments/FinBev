@@ -52,6 +52,7 @@ public class GraphMailboxController(GraphMailboxTokenProvider tokens, ICurrentUs
         var result = await tokens.PollDeviceCodeAsync(userId, cancellationToken).ConfigureAwait(false);
         return Ok(new DeviceCodePollDto(result.Status, result.Error));
     }
+ 
 
     public sealed record MailboxStatusDto(bool Connected);
 

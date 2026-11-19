@@ -13,4 +13,7 @@ public class AppUser : IdentityUser
     public string? EntraUpn { get; set; }
     /// <summary>One emoji from the staff keyboard, shown beside this person's name.</summary>
     public string? Emoji { get; set; }
+    public string? PasswordResetCodeHash { get; set; }
+    public DateTime? PasswordResetCodeExpiresUtc { get; set; }
+    public int PasswordResetCodeAttempts { get; set; }
 }

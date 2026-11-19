@@ -73,6 +73,7 @@ const errorClass = computed(() =>
           Connect mailbox
         </button>
       </div>
+      <p v-else-if="mailboxConnectState === 'starting'" class="mt-2">Contacting Microsoft 365…</p>
       <div v-else-if="mailboxConnectState === 'polling'" class="mt-2 space-y-2">
         <p :class="codeClass">{{ mailboxConnectUserCode }}</p>
         <p>

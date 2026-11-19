@@ -13,7 +13,7 @@ public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEm
             : string.Empty;
 
         logger.LogWarning(
-            "Email was not sent because mail is not set up. To={To} Subject={Subject}{Attachments}",
+            "Email was not delivered. To={To} Subject={Subject}{Attachments}",
             message.ToAddress,
             message.Subject,
             attachmentNote);

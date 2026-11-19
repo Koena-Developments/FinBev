@@ -24,6 +24,12 @@ public static class EmailTransportDiagnostics
         var smtp = emailSection.GetValue<bool>("Enabled")
             && !string.IsNullOrWhiteSpace(emailSection["SmtpHost"]);
 
+        if (string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("Petty cash email transport: local development. Request and reminder emails are not sent.");
+            return;
+        }
+
         var sender = services.GetRequiredService<IEmailSender>();
         var mode = sender switch
         {

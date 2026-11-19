@@ -20,6 +20,8 @@ public sealed class GraphMailboxTokenProvider(
 {
     private readonly HttpClient _http = new();
     private readonly ConcurrentDictionary<string, PendingDeviceCode> _pending = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _refreshGates = new();
+    private readonly ConcurrentDictionary<string, CachedAccessToken> _accessTokens = new();
 
     private readonly string _tenantId = configuration["Graph:TenantId"]
         ?? throw new InvalidOperationException("Microsoft 365 mailbox connection is not set up. Contact IT.");
@@ -159,47 +161,87 @@ public sealed class GraphMailboxTokenProvider(
 
     public async Task<string> GetAccessTokenAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var path = GraphDelegatedTokenPaths.CacheFilePath(TokenFolder, userId);
-        if (!File.Exists(path))
+        if (TryGetCachedAccessToken(userId, out var cached))
         {
-            throw new InvalidOperationException(
-                "Microsoft 365 mailbox is not connected. Use Account → Connect mailbox in the portal.");
+            return cached;
         }
 
-        var json = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
-        var stored = JsonSerializer.Deserialize<StoredMailboxToken>(json, Json)
-            ?? throw new InvalidOperationException("Your Microsoft 365 mailbox connection is damaged. Connect it again under Account, then Connect mailbox.");
-
-        var form = new Dictionary<string, string>
+        var gate = _refreshGates.GetOrAdd(userId, static _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            ["grant_type"] = "refresh_token",
-            ["client_id"] = _clientId,
-            ["refresh_token"] = stored.RefreshToken,
-            ["scope"] = string.Join(' ', MailScopes)
-        };
-        AddClientSecretIfConfigured(form);
+            if (TryGetCachedAccessToken(userId, out cached))
+            {
+                return cached;
+            }
 
-        var response = await _http.PostAsync(
-                $"{Authority()}/oauth2/v2.0/token",
-                new FormUrlEncodedContent(form),
-                cancellationToken)
-            .ConfigureAwait(false);
+            var path = GraphDelegatedTokenPaths.CacheFilePath(TokenFolder, userId);
+            if (!File.Exists(path))
+            {
+                throw new MailboxReconnectRequiredException(
+                    "Microsoft 365 mailbox is not connected. Use Account → Connect mailbox in the portal.");
+            }
 
-        var raw = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        var token = JsonSerializer.Deserialize<TokenResponse>(raw, Json);
-        if (!response.IsSuccessStatusCode || string.IsNullOrWhiteSpace(token?.AccessToken))
-        {
-            logger.LogWarning("Mailbox token refresh failed for {UserId} with status {StatusCode}", userId, (int)response.StatusCode);
-            throw new InvalidOperationException("Connect your Microsoft 365 mailbox again under Account, then Connect mailbox.");
+            var stored = await ReadStoredTokenAsync(path, cancellationToken).ConfigureAwait(false);
+            if (stored is null)
+            {
+                ForgetMailbox(userId, path);
+                throw new MailboxReconnectRequiredException(
+                    "Your Microsoft 365 mailbox connection is damaged. Connect it again under Account, then Connect mailbox.");
+            }
+
+            var refreshed = await RequestAccessTokenAsync(stored.RefreshToken, cancellationToken).ConfigureAwait(false);
+            if (!refreshed.Succeeded && IsDeadRefreshToken(refreshed.Token?.Error))
+            {
+                var latest = await ReadStoredTokenAsync(path, cancellationToken).ConfigureAwait(false);
+                if (latest is not null
+                    && !string.Equals(latest.RefreshToken, stored.RefreshToken, StringComparison.Ordinal))
+                {
+                    stored = latest;
+                    refreshed = await RequestAccessTokenAsync(stored.RefreshToken, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            var token = refreshed.Token;
+            var accessToken = token?.AccessToken;
+            if (!refreshed.Succeeded || token is null || string.IsNullOrWhiteSpace(accessToken))
+            {
+                logger.LogWarning(
+                    "Mailbox token refresh failed for {UserId} with status {StatusCode}: {OAuthError}",
+                    userId,
+                    refreshed.StatusCode,
+                    DescribeTokenError(token));
+
+                if (IsDeadRefreshToken(token?.Error))
+                {
+                    var current = await ReadStoredTokenAsync(path, cancellationToken).ConfigureAwait(false);
+                    if (current is null || string.Equals(current.RefreshToken, stored.RefreshToken, StringComparison.Ordinal))
+                    {
+                        ForgetMailbox(userId, path);
+                    }
+
+                    throw new MailboxReconnectRequiredException(
+                        "Connect your Microsoft 365 mailbox again under Account, then Connect mailbox.");
+                }
+
+                throw new InvalidOperationException(
+                    "Connect your Microsoft 365 mailbox again under Account, then Connect mailbox.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(token.RefreshToken))
+            {
+                var updated = new StoredMailboxToken(token.RefreshToken, DateTimeOffset.UtcNow);
+                await SecretFiles.WriteAsync(path, JsonSerializer.Serialize(updated, Json), cancellationToken).ConfigureAwait(false);
+            }
+
+            var lifetimeSeconds = token.ExpiresIn > 120 ? token.ExpiresIn - 60 : 300;
+            _accessTokens[userId] = new CachedAccessToken(accessToken, DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds));
+            return accessToken;
         }
-
-        if (!string.IsNullOrWhiteSpace(token.RefreshToken))
+        finally
         {
-            var updated = new StoredMailboxToken(token.RefreshToken, DateTimeOffset.UtcNow);
-            await SecretFiles.WriteAsync(path, JsonSerializer.Serialize(updated, Json), cancellationToken).ConfigureAwait(false);
+            gate.Release();
         }
-
-        return token.AccessToken;
     }
 
     public async Task<GraphServiceClient> CreateGraphClientAsync(string userId, CancellationToken cancellationToken = default)
@@ -212,6 +254,110 @@ public sealed class GraphMailboxTokenProvider(
             scopes: ["https://graph.microsoft.com/.default"]);
         var adapter = new HttpClientRequestAdapter(authProvider);
         return new GraphServiceClient(adapter);
+    }
+
+    private bool TryGetCachedAccessToken(string userId, out string accessToken)
+    {
+        accessToken = string.Empty;
+        if (!_accessTokens.TryGetValue(userId, out var cached) || cached.ExpiresAtUtc <= DateTimeOffset.UtcNow)
+        {
+            return false;
+        }
+
+        accessToken = cached.AccessToken;
+        return true;
+    }
+
+    private async Task<StoredMailboxToken?> ReadStoredTokenAsync(string path, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
+            var stored = JsonSerializer.Deserialize<StoredMailboxToken>(json, Json);
+            return stored is { RefreshToken.Length: > 0 } ? stored : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private async Task<RefreshAttempt> RequestAccessTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    {
+        var form = new Dictionary<string, string>
+        {
+            ["grant_type"] = "refresh_token",
+            ["client_id"] = _clientId,
+            ["refresh_token"] = refreshToken,
+            ["scope"] = string.Join(' ', MailScopes)
+        };
+        AddClientSecretIfConfigured(form);
+
+        var response = await _http.PostAsync(
+                $"{Authority()}/oauth2/v2.0/token",
+                new FormUrlEncodedContent(form),
+                cancellationToken)
+            .ConfigureAwait(false);
+        var raw = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var token = JsonSerializer.Deserialize<TokenResponse>(raw, Json);
+        var succeeded = response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(token?.AccessToken);
+        return new RefreshAttempt(succeeded, (int)response.StatusCode, token);
+    }
+
+    private void ForgetMailbox(string userId, string path)
+    {
+        _accessTokens.TryRemove(userId, out _);
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            logger.LogWarning(
+                "Removed the stored Microsoft 365 mailbox token for {UserId}. That person needs to connect the mailbox again under Account.",
+                userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not remove the stored mailbox token for {UserId}", userId);
+        }
+    }
+
+    private static bool IsDeadRefreshToken(string? error) =>
+        error is "invalid_grant" or "interaction_required" or "consent_required";
+
+    private static string DescribeTokenError(TokenResponse? token)
+    {
+        if (token is null)
+        {
+            return "no error details";
+        }
+
+        var description = token.ErrorDescription;
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            var trace = description.IndexOf("Trace ID", StringComparison.OrdinalIgnoreCase);
+            if (trace >= 0)
+            {
+                description = description[..trace];
+            }
+
+            description = description.Trim().TrimEnd('.');
+            if (description.Length > 220)
+            {
+                description = description[..220];
+            }
+        }
+
+        var codes = token.ErrorCodes is { Length: > 0 } ? string.Join(',', token.ErrorCodes) : null;
+        var detail = string.Join(' ', new[] { token.Error, codes, description }.Where(part => !string.IsNullOrWhiteSpace(part)));
+        return string.IsNullOrWhiteSpace(detail) ? "no error details" : detail;
     }
 
     private string Authority() => $"https://login.microsoftonline.com/{_tenantId}";
@@ -273,9 +419,19 @@ public sealed class GraphMailboxTokenProvider(
 
         [JsonPropertyName("error_description")]
         public string? ErrorDescription { get; init; }
+
+        [JsonPropertyName("error_codes")]
+        public int[]? ErrorCodes { get; init; }
+
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; init; }
     }
 
     private sealed record StoredMailboxToken(string RefreshToken, DateTimeOffset UpdatedAtUtc);
+
+    private sealed record CachedAccessToken(string AccessToken, DateTimeOffset ExpiresAtUtc);
+
+    private readonly record struct RefreshAttempt(bool Succeeded, int StatusCode, TokenResponse? Token);
 
     private sealed class StaticAccessTokenCredential(string token) : TokenCredential
     {

@@ -211,6 +211,16 @@ namespace PettyCash.Infrastructure.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
+                    b.Property<int>("PasswordResetCodeAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PasswordResetCodeExpiresUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordResetCodeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
 
@@ -564,8 +574,14 @@ namespace PettyCash.Infrastructure.Migrations
                     b.Property<Guid>("CashRequestId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("EmployeeOverdueSends")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("EmployeeRemindedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ManagerOverdueSends")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("ManagerRemindedAtUtc")
                         .HasColumnType("timestamp with time zone");

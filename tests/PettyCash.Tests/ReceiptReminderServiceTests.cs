@@ -7,6 +7,7 @@ using PettyCash.Application.Dtos;
 using PettyCash.Application.Options;
 using PettyCash.Domain.Entities;
 using PettyCash.Domain.Enums;
+using PettyCash.Infrastructure.Graph;
 using PettyCash.Infrastructure.Persistence;
 using PettyCash.Infrastructure.Services;
 
@@ -17,7 +18,7 @@ public class ReceiptReminderServiceTests
     private static readonly DateTime PaidAt = new(2026, 11, 1, 8, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public async Task Reminds_employee_and_senior_manager_until_a_receipt_is_uploaded()
+    public async Task Reminds_employee_and_senior_manager_twice_after_the_receipt_is_overdue()
     {
         await using var db = CreateDb();
         var claim = await SeedAsync(db);
@@ -25,23 +26,17 @@ public class ReceiptReminderServiceTests
         var uploads = new ReceiptUploads();
 
         await SendAsync(db, mail, uploads, PaidAt.AddHours(1));
-
-        Assert.Equal(2, mail.Messages.Count);
-        var employee = mail.Messages.Single(message => message.ToAddress == "thandi@foodbev.co.za");
-        var manager = mail.Messages.Single(message => message.ToAddress == "acting@foodbev.co.za");
-        Assert.Contains("within 3 days", employee.Subject, StringComparison.Ordinal);
-        Assert.Contains("please ask Thandi Nkosi", manager.Subject, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains($"/upload?claim={claim.RequestId:D}", employee.PlainTextBody, StringComparison.Ordinal);
-        Assert.Contains($"/requests/{claim.RequestId:D}", manager.PlainTextBody, StringComparison.Ordinal);
-        Assert.DoesNotContain(mail.Messages, message => message.ToAddress == "primary@foodbev.co.za");
-
-        mail.Messages.Clear();
-        await SendAsync(db, mail, uploads, PaidAt.AddDays(1));
         Assert.Empty(mail.Messages);
 
         await SendAsync(db, mail, uploads, PaidAt.AddDays(3));
         Assert.Equal(2, mail.Messages.Count);
-        Assert.All(mail.Messages, message => Assert.StartsWith("Overdue:", message.Subject, StringComparison.Ordinal));
+        var employee = mail.Messages.Single(message => message.ToAddress == "thandi@foodbev.co.za");
+        var manager = mail.Messages.Single(message => message.ToAddress == "acting@foodbev.co.za");
+        Assert.StartsWith("Overdue:", employee.Subject, StringComparison.Ordinal);
+        Assert.Contains("please ask Thandi Nkosi", manager.Subject, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"/upload?claim={claim.RequestId:D}", employee.PlainTextBody, StringComparison.Ordinal);
+        Assert.Contains($"/requests/{claim.RequestId:D}", manager.PlainTextBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(mail.Messages, message => message.ToAddress == "primary@foodbev.co.za");
 
         mail.Messages.Clear();
         await SendAsync(db, mail, uploads, PaidAt.AddDays(3).AddHours(12));
@@ -49,8 +44,12 @@ public class ReceiptReminderServiceTests
 
         await SendAsync(db, mail, uploads, PaidAt.AddDays(4));
         Assert.Equal(2, mail.Messages.Count);
+        Assert.All(mail.Messages, message => Assert.StartsWith("Overdue:", message.Subject, StringComparison.Ordinal));
 
         mail.Messages.Clear();
+        await SendAsync(db, mail, uploads, PaidAt.AddDays(5));
+        Assert.Empty(mail.Messages);
+
         uploads.WithReceipts.Add(claim.RequestId);
         await SendAsync(db, mail, uploads, PaidAt.AddDays(6));
         Assert.Empty(mail.Messages);
@@ -90,7 +89,7 @@ public class ReceiptReminderServiceTests
         await SeedAsync(db, signedByActing: false);
         var mail = new CapturingEmailSender();
 
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(2));
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3));
 
         Assert.Contains(mail.Messages, message => message.ToAddress == "primary@foodbev.co.za");
         Assert.DoesNotContain(mail.Messages, message => message.ToAddress == "acting@foodbev.co.za");
@@ -103,7 +102,7 @@ public class ReceiptReminderServiceTests
         await SeedAsync(db, employeeIsManager: true);
         var mail = new CapturingEmailSender();
 
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(2));
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3));
 
         var message = Assert.Single(mail.Messages);
         Assert.Equal("thandi@foodbev.co.za", message.ToAddress);
@@ -117,12 +116,12 @@ public class ReceiptReminderServiceTests
         var mail = new CapturingEmailSender();
         var mailbox = new ConnectedMailbox();
 
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(1), delegated: true, mailbox: mailbox);
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3), delegated: true, mailbox: mailbox);
         Assert.Empty(mail.Messages);
         Assert.Empty(await db.ReceiptReminders.ToListAsync());
 
         mailbox.Ids.Add("finance-user");
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(2), delegated: true, mailbox: mailbox);
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3).AddHours(1), delegated: true, mailbox: mailbox);
         Assert.Equal(2, mail.Messages.Count);
         Assert.All(mail.Messages, message => Assert.Equal("finance-user", message.SenderUserId));
     }
@@ -134,13 +133,35 @@ public class ReceiptReminderServiceTests
         await SeedAsync(db);
         var mail = new FlakyEmailSender();
 
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(1));
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3));
         Assert.Single(mail.Messages);
         Assert.Equal("acting@foodbev.co.za", mail.Messages[0].ToAddress);
 
-        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddHours(2));
+        await SendAsync(db, mail, new ReceiptUploads(), PaidAt.AddDays(3).AddHours(1));
         Assert.Equal(2, mail.Messages.Count);
         Assert.Equal("thandi@foodbev.co.za", mail.Messages[1].ToAddress);
+    }
+
+    [Fact]
+    public async Task Sends_from_the_next_mailbox_when_the_payer_token_is_rejected()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        var mail = new RejectingFirstSender("finance-user");
+
+        await SendAsync(
+            db,
+            mail,
+            new ReceiptUploads(),
+            PaidAt.AddDays(3),
+            delegated: true,
+            mailbox: new ConnectedMailbox("finance-user", "someone-else"));
+
+        Assert.Equal(2, mail.Messages.Count);
+        Assert.All(mail.Messages, message => Assert.Equal("someone-else", message.SenderUserId));
+        var reminder = Assert.Single(await db.ReceiptReminders.ToListAsync());
+        Assert.NotNull(reminder.EmployeeRemindedAtUtc);
+        Assert.NotNull(reminder.ManagerRemindedAtUtc);
     }
 
     [Fact]
@@ -154,7 +175,7 @@ public class ReceiptReminderServiceTests
             db,
             mail,
             new ReceiptUploads(),
-            PaidAt.AddHours(1),
+            PaidAt.AddDays(3),
             delegated: true,
             mailbox: new ConnectedMailbox("someone-else"));
 
@@ -324,6 +345,23 @@ public class ReceiptReminderServiceTests
 
         public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RejectingFirstSender(string rejectedUserId) : IEmailSender
+    {
+        public List<EmailMessage> Messages { get; } = [];
+
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        {
+            if (string.Equals(message.SenderUserId, rejectedUserId, StringComparison.Ordinal))
+            {
+                throw new MailboxReconnectRequiredException(
+                    "Connect your Microsoft 365 mailbox again under Account, then Connect mailbox.");
+            }
+
             Messages.Add(message);
             return Task.CompletedTask;
         }

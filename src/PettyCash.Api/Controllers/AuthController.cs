@@ -31,6 +31,15 @@ public class AuthController(IAuthService authService, ICurrentUser currentUser, 
 
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<ForgotPasswordResponse>> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.SendResetCodeAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [HttpPost("reset-password")]
     public async Task<ActionResult<LoginResponse>> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
     {

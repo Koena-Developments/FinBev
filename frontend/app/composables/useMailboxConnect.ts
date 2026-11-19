@@ -9,7 +9,7 @@ export function useMailboxConnect() {
   const api = useApi()
   const { loadMe, me } = useMe()
 
-  const mailboxConnectState = useState<'idle' | 'polling' | 'success'>(
+  const mailboxConnectState = useState<'idle' | 'starting' | 'polling' | 'success'>(
     'mailbox-connect-state',
     () => 'idle'
   )
@@ -70,7 +70,7 @@ export function useMailboxConnect() {
   async function startMailboxConnect() {
     mailboxConnectError.value = ''
     stopMailboxPoll()
-    mailboxConnectState.value = 'idle'
+    mailboxConnectState.value = 'starting'
     try {
       const start = await api<DeviceCodeStart>('/api/mailbox/microsoft/device-code/start', {
         method: 'POST',

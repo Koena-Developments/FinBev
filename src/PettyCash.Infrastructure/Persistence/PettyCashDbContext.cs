@@ -28,6 +28,7 @@ public class PettyCashDbContext(DbContextOptions<PettyCashDbContext> options)
             e.Property(x => x.DisplayName).HasMaxLength(200);
             e.Property(x => x.Title).HasMaxLength(300);
             e.Property(x => x.Emoji).HasMaxLength(32);
+            e.Property(x => x.PasswordResetCodeHash).HasMaxLength(64);
             e.HasOne(x => x.Department).WithMany(d => d.Users).HasForeignKey(x => x.DepartmentId);
         });
 

@@ -12,6 +12,7 @@ using PettyCash.Domain.Entities;
 using PettyCash.Domain.Enums;
 using PettyCash.Domain.Policy;
 using PettyCash.Infrastructure.Email;
+using PettyCash.Infrastructure.Graph;
 using PettyCash.Infrastructure.Persistence;
 
 namespace PettyCash.Infrastructure.Services;
@@ -83,6 +84,7 @@ public sealed class ReceiptReminderService(
 
         var sent = 0;
         var usedFallbackSender = false;
+        var deadSenders = new HashSet<string>(StringComparer.Ordinal);
         foreach (var request in requests)
         {
             if (withReceipts.Contains(request.Id) || !payoutByRequest.TryGetValue(request.Id, out var payout))
@@ -103,15 +105,20 @@ public sealed class ReceiptReminderService(
             }
 
             reminders.TryGetValue(request.Id, out var reminder);
-            var remindEmployee = ReceiptReminderSchedule.ShouldSend(payout.CreatedAtUtc, now, reminder?.EmployeeRemindedAtUtc);
+            var dueAtForCount = ReceiptReminderSchedule.DueAt(payout.CreatedAtUtc);
+            var employeeSends = OverdueSendsSoFar(reminder?.EmployeeOverdueSends ?? 0, reminder?.EmployeeRemindedAtUtc, dueAtForCount);
+            var managerSends = OverdueSendsSoFar(reminder?.ManagerOverdueSends ?? 0, reminder?.ManagerRemindedAtUtc, dueAtForCount);
+            var remindEmployee = ReceiptReminderSchedule.ShouldSend(
+                payout.CreatedAtUtc, now, reminder?.EmployeeRemindedAtUtc, employeeSends);
             var remindManager = manager is not null
-                && ReceiptReminderSchedule.ShouldSend(payout.CreatedAtUtc, now, reminder?.ManagerRemindedAtUtc);
+                && ReceiptReminderSchedule.ShouldSend(
+                    payout.CreatedAtUtc, now, reminder?.ManagerRemindedAtUtc, managerSends);
             if (!remindEmployee && !remindManager)
             {
                 continue;
             }
 
-            var senderUserId = ResolveSenderUserId(payout.CreatedByUserId, connectedMailboxes);
+            var senderUserId = ResolveSenderUserId(payout.CreatedByUserId, connectedMailboxes, deadSenders);
             if (RequiresDelegatedSender && senderUserId is null)
             {
                 continue;
@@ -138,18 +145,34 @@ public sealed class ReceiptReminderService(
             }
 
             if (remindEmployee
-                && await TrySendAsync(senderUserId, employee, EmployeeSubject(request, overdue), EmployeeBody(employee, request, payout.CreatedAtUtc, dueAt, overdue), cancellationToken))
+                && await SendWithFallbackAsync(
+                    payout.CreatedByUserId,
+                    connectedMailboxes,
+                    deadSenders,
+                    employee,
+                    EmployeeSubject(request, overdue),
+                    EmployeeBody(employee, request, payout.CreatedAtUtc, dueAt, overdue),
+                    cancellationToken))
             {
                 reminder.EmployeeRemindedAtUtc = now;
+                reminder.EmployeeOverdueSends = employeeSends + 1;
                 changed = true;
                 sent++;
             }
 
             if (remindManager
                 && manager is not null
-                && await TrySendAsync(senderUserId, manager, ManagerSubject(employee, request, overdue), ManagerBody(manager, employee, request, payout.CreatedAtUtc, dueAt, overdue), cancellationToken))
+                && await SendWithFallbackAsync(
+                    payout.CreatedByUserId,
+                    connectedMailboxes,
+                    deadSenders,
+                    manager,
+                    ManagerSubject(employee, request, overdue),
+                    ManagerBody(manager, employee, request, payout.CreatedAtUtc, dueAt, overdue),
+                    cancellationToken))
             {
                 reminder.ManagerRemindedAtUtc = now;
+                reminder.ManagerOverdueSends = managerSends + 1;
                 changed = true;
                 sent++;
             }
@@ -171,20 +194,79 @@ public sealed class ReceiptReminderService(
         }
     }
 
-    private static string? ResolveSenderUserId(string? disbursedByUserId, IReadOnlyList<string> connectedMailboxes)
+    private static int OverdueSendsSoFar(int stored, DateTime? lastSentAtUtc, DateTime dueAtUtc)
     {
-        if (connectedMailboxes.Count == 0)
+        if (stored > 0)
         {
-            return null;
+            return stored;
         }
 
+        // Claims already chased after the deadline under the old daily schedule are finished.
+        if (lastSentAtUtc is not null && lastSentAtUtc.Value >= dueAtUtc)
+        {
+            return ReceiptReminderSchedule.MaxOverdueSends;
+        }
+
+        return 0;
+    }
+
+    private static string? ResolveSenderUserId(
+        string? disbursedByUserId,
+        IReadOnlyList<string> connectedMailboxes,
+        IReadOnlySet<string> deadSenders)
+    {
         if (!string.IsNullOrEmpty(disbursedByUserId)
-            && connectedMailboxes.Contains(disbursedByUserId, StringComparer.Ordinal))
+            && connectedMailboxes.Contains(disbursedByUserId, StringComparer.Ordinal)
+            && !deadSenders.Contains(disbursedByUserId))
         {
             return disbursedByUserId;
         }
 
-        return connectedMailboxes[0];
+        return connectedMailboxes.FirstOrDefault(id => !deadSenders.Contains(id));
+    }
+
+    private async Task<bool> SendWithFallbackAsync(
+        string? disbursedByUserId,
+        IReadOnlyList<string> connectedMailboxes,
+        HashSet<string> deadSenders,
+        AppUser user,
+        string subject,
+        (string Html, string Text) body,
+        CancellationToken cancellationToken)
+    {
+        var attempted = new HashSet<string>(StringComparer.Ordinal);
+        while (true)
+        {
+            var senderUserId = RequiresDelegatedSender
+                ? ResolveSenderUserId(disbursedByUserId, connectedMailboxes, deadSenders)
+                : null;
+            if (RequiresDelegatedSender && senderUserId is null)
+            {
+                return false;
+            }
+
+            if (senderUserId is not null && !attempted.Add(senderUserId))
+            {
+                return false;
+            }
+
+            var result = await TrySendAsync(senderUserId, user, subject, body, cancellationToken).ConfigureAwait(false);
+            if (result == SendResult.MailboxRejected)
+            {
+                if (senderUserId is null)
+                {
+                    return false;
+                }
+
+                deadSenders.Add(senderUserId);
+                logger.LogWarning(
+                    "Mailbox for user {SenderUserId} can no longer send. Later receipt reminders in this run will use another connected mailbox.",
+                    senderUserId);
+                continue;
+            }
+
+            return result != SendResult.Failed;
+        }
     }
 
     private bool RequiresDelegatedSender =>
@@ -209,7 +291,15 @@ public sealed class ReceiptReminderService(
         return primaryByDepartment.TryGetValue(request.DepartmentId, out var primaryId) ? primaryId : null;
     }
 
-    private async Task<bool> TrySendAsync(
+    private enum SendResult
+    {
+        Sent,
+        Skipped,
+        Failed,
+        MailboxRejected
+    }
+
+    private async Task<SendResult> TrySendAsync(
         string? senderUserId,
         AppUser user,
         string subject,
@@ -220,7 +310,7 @@ public sealed class ReceiptReminderService(
         if (address is null)
         {
             logger.LogWarning("No email address for {Username}; skipped receipt reminder \"{Subject}\"", user.UserName, subject);
-            return true;
+            return SendResult.Skipped;
         }
 
         var (html, text) = body;
@@ -243,12 +333,17 @@ public sealed class ReceiptReminderService(
                     text,
                     SenderUserId: RequiresDelegatedSender ? senderUserId : null),
                 cancellationToken);
-            return true;
+            return SendResult.Sent;
+        }
+        catch (MailboxReconnectRequiredException ex)
+        {
+            logger.LogWarning(ex, "Failed to send receipt reminder \"{Subject}\" to {Address}", subject, address);
+            return SendResult.MailboxRejected;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send receipt reminder \"{Subject}\" to {Address}", subject, address);
-            return false;
+            return SendResult.Failed;
         }
     }
 

@@ -1,10 +1,12 @@
 namespace PettyCash.Domain.Policy;
 
 /// <summary>
-/// Remind once during the receipt window, again when the window closes, then once a day until a receipt is uploaded.
+/// After the receipt window closes, send an overdue reminder twice, one day apart, then stop.
 /// </summary>
 public static class ReceiptReminderSchedule
 {
+    public const int MaxOverdueSends = 2;
+
     public static TimeSpan Deadline => TimeSpan.FromDays(PettyCashPolicy.ReceiptDueDays);
 
     public static readonly TimeSpan OverdueRepeat = TimeSpan.FromDays(1);
@@ -14,25 +16,19 @@ public static class ReceiptReminderSchedule
     public static bool IsOverdue(DateTime disbursedAtUtc, DateTime utcNow) =>
         utcNow >= DueAt(disbursedAtUtc);
 
-    public static bool ShouldSend(DateTime disbursedAtUtc, DateTime utcNow, DateTime? lastSentAtUtc)
+    public static bool ShouldSend(DateTime disbursedAtUtc, DateTime utcNow, DateTime? lastSentAtUtc, int overdueSends)
     {
-        if (utcNow < disbursedAtUtc)
+        if (utcNow < disbursedAtUtc || !IsOverdue(disbursedAtUtc, utcNow))
+        {
+            return false;
+        }
+
+        if (overdueSends >= MaxOverdueSends)
         {
             return false;
         }
 
         if (lastSentAtUtc is null)
-        {
-            return true;
-        }
-
-        var dueAt = DueAt(disbursedAtUtc);
-        if (utcNow < dueAt)
-        {
-            return false;
-        }
-
-        if (lastSentAtUtc.Value < dueAt)
         {
             return true;
         }

@@ -7,4 +7,6 @@ public class ReceiptReminder
     public CashRequest CashRequest { get; set; } = null!;
     public DateTime? EmployeeRemindedAtUtc { get; set; }
     public DateTime? ManagerRemindedAtUtc { get; set; }
+    public int EmployeeOverdueSends { get; set; }
+    public int ManagerOverdueSends { get; set; }
 }

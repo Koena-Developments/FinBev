@@ -17,10 +17,13 @@ const email = ref('')
 const password = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
+const resetCode = ref('')
+const codeSent = ref(false)
 const rememberMe = ref(false)
 const showPassword = ref(false)
 const resetting = ref(false)
 const error = ref('')
+const notice = ref('')
 const submitting = ref(false)
 const { markSignedIn } = useAuth()
 const api = useApi()
@@ -35,15 +38,45 @@ if (import.meta.client) {
 
 function showReset() {
   resetting.value = true
+  codeSent.value = false
+  resetCode.value = ''
   error.value = ''
+  notice.value = ''
   password.value = ''
 }
 
 function showSignIn() {
   resetting.value = false
+  codeSent.value = false
   error.value = ''
+  notice.value = ''
   newPassword.value = ''
   confirmPassword.value = ''
+  resetCode.value = ''
+}
+
+async function sendResetCode() {
+  error.value = ''
+  submitting.value = true
+  try {
+    const result = await api<{ accepted: boolean; message: string }>(
+      '/api/auth/forgot-password',
+      { method: 'POST', body: JSON.stringify({ email: email.value.trim() }) }
+    )
+    if (!result.accepted) {
+      error.value = result.message || 'We could not email the code. Try again in a moment.'
+      notice.value = ''
+      return
+    }
+    codeSent.value = true
+    resetCode.value = ''
+    error.value = ''
+    notice.value = result.message || 'If that email belongs to a staff account, we sent a 4-digit code. It expires in 15 minutes.'
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'We could not email the code. Try again in a moment.'
+  } finally {
+    submitting.value = false
+  }
 }
 
 async function resetPassword() {
@@ -56,7 +89,14 @@ async function resetPassword() {
   try {
     const result = await api<{ success: boolean; token: string | null; message: string | null }>(
       '/api/auth/reset-password',
-      { method: 'POST', body: JSON.stringify({ email: email.value.trim(), newPassword: newPassword.value }) }
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.value.trim(),
+          code: resetCode.value.trim(),
+          newPassword: newPassword.value
+        })
+      }
     )
     if (!result.success) {
       error.value = result.message || 'We could not reset your password. Try again.'
@@ -72,6 +112,10 @@ async function resetPassword() {
 }
 
 async function submit() {
+  if (resetting.value && !codeSent.value) {
+    await sendResetCode()
+    return
+  }
   if (resetting.value) {
     await resetPassword()
     return
@@ -127,7 +171,7 @@ async function submit() {
           </div>
           <img src="/images/foodbev-logo.png" alt="FoodBev Manufacturing SETA" class="finbev-logo" />
           <h2>{{ resetting ? 'Reset password' : 'Sign in' }}</h2>
-          <p class="finbev-form__lead">{{ resetting ? 'Choose a new password for your work email.' : 'Welcome back to FinBev' }}</p>
+          <p class="finbev-form__lead">{{ resetting ? (codeSent ? 'Enter the 4-digit code from your email, then choose a new password.' : 'We will email a 4-digit code to confirm this account.') : 'Welcome back to FinBev' }}</p>
 
           <label class="finbev-field" for="email">
             Email
@@ -167,7 +211,22 @@ async function submit() {
             </span>
           </label>
 
-          <template v-if="resetting">
+          <template v-if="resetting && codeSent">
+            <label class="finbev-field" for="reset-code">
+              Code
+              <span class="finbev-field__control">
+                <input
+                  id="reset-code"
+                  v-model="resetCode"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="4"
+                  pattern="[0-9]{4}"
+                  placeholder="4-digit code"
+                  required
+                />
+              </span>
+            </label>
             <label class="finbev-field" for="new-password">
               New password
               <span class="finbev-field__control">
@@ -207,14 +266,16 @@ async function submit() {
               <input v-model="rememberMe" type="checkbox" />
               Remember me
             </label>
+            <button v-if="resetting && codeSent" type="button" class="finbev-link" @click="sendResetCode">Email a new code</button>
             <button v-if="resetting" type="button" class="finbev-link" @click="showSignIn">Back to sign in</button>
             <button v-else type="button" class="finbev-link" @click="showReset">Reset password</button>
           </div>
 
+          <p v-if="notice && !error" class="finbev-note">{{ notice }}</p>
           <p v-if="error" class="finbev-error" role="alert">{{ error }}</p>
 
           <button type="submit" class="finbev-submit" :disabled="submitting">
-            {{ submitting ? (resetting ? 'Saving…' : 'Signing in…') : (resetting ? 'Save new password' : 'Sign in') }}
+            {{ submitting ? (resetting ? (codeSent ? 'Saving…' : 'Sending…') : 'Signing in…') : (resetting ? (codeSent ? 'Save new password' : 'Email me a code') : 'Sign in') }}
           </button>
         </form>
       </section>
@@ -441,6 +502,13 @@ async function submit() {
 
 .finbev-link:hover {
   text-decoration: underline;
+}
+
+.finbev-note {
+  margin: 0 0 14px;
+  color: #1a4080;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .finbev-error {

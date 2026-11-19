@@ -10,7 +10,10 @@ public static class SecretFiles
             Directory.CreateDirectory(directory);
         }
 
-        await File.WriteAllTextAsync(path, contents, cancellationToken).ConfigureAwait(false);
+        var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        await File.WriteAllTextAsync(temp, contents, cancellationToken).ConfigureAwait(false);
+        TryRestrict(temp);
+        File.Move(temp, path, overwrite: true);
         TryRestrict(path);
     }
 

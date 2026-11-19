@@ -67,7 +67,17 @@ public static class DependencyInjection
 
         services.AddSingleton<GraphMailboxTokenProvider>();
 
-        if (useDelegatedGraph)
+        var isDevelopment = string.Equals(
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development",
+            StringComparison.OrdinalIgnoreCase);
+
+        // Local runs must not deliver mail, even when Graph or SMTP secrets are present.
+        if (isDevelopment)
+        {
+            services.AddScoped<IEmailSender, LoggingEmailSender>();
+        }
+        else if (useDelegatedGraph)
         {
             services.AddScoped<IEmailSender, DelegatedGraphEmailSender>();
         }
@@ -78,10 +88,6 @@ public static class DependencyInjection
         else if (smtpEnabled)
         {
             services.AddScoped<IEmailSender, SmtpEmailSender>();
-        }
-        else if (string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase))
-        {
-            services.AddScoped<IEmailSender, OutboxEmailSender>();
         }
         else
         {
@@ -97,6 +103,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IApprovalRoutingService, ApprovalRoutingService>();
         services.AddScoped<StaffDataSeeder>();
+        services.AddScoped<PasswordResetMailer>();
         services.AddScoped<AuditUserContext>();
 
         var graphConfigured = !string.IsNullOrWhiteSpace(configuration["Graph:TenantId"])
@@ -113,7 +120,10 @@ public static class DependencyInjection
         }
 
         services.AddHostedService<ApproverAvailabilitySyncHostedService>();
-        services.AddHostedService<ReceiptReminderHostedService>();
+        if (!isDevelopment)
+        {
+            services.AddHostedService<ReceiptReminderHostedService>();
+        }
 
         return services;
     }

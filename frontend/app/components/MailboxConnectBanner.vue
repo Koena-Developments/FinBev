@@ -1,5 +1,14 @@
 <script setup lang="ts">
-const { needsMailboxConnection, startMailboxConnect } = useMailboxConnect()
+const {
+  needsMailboxConnection,
+  mailboxConnectState,
+  mailboxConnectUserCode,
+  mailboxConnectVerificationUri,
+  mailboxConnectMessage,
+  mailboxConnectError,
+  startMailboxConnect,
+  cancelMailboxConnect
+} = useMailboxConnect()
 
 const props = withDefaults(
   defineProps<{
@@ -24,7 +33,34 @@ const buttonClass =
 
 <template>
   <div v-if="needsMailboxConnection" :class="wrapperClass">
-    <span>Connect your Microsoft 365 mailbox so emails send from you when you submit or approve.</span>
-    <button type="button" :class="buttonClass" @click="startMailboxConnect">Connect mailbox</button>
+    <div class="min-w-0 flex-1">
+      <p v-if="mailboxConnectState === 'starting'">Contacting Microsoft 365…</p>
+      <div v-else-if="mailboxConnectState === 'polling'" class="space-y-1">
+        <p>Enter this code at Microsoft, then sign in with your work account.</p>
+        <p class="font-mono text-base font-bold tracking-wide text-foodbev-navy">{{ mailboxConnectUserCode }}</p>
+        <a
+          :href="mailboxConnectVerificationUri"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-foodbev-sky underline"
+        >Open microsoft.com/devicelogin</a>
+        <p v-if="mailboxConnectMessage" class="text-xs text-slate-500">{{ mailboxConnectMessage }}</p>
+      </div>
+      <p v-else>Connect your Microsoft 365 mailbox so emails send from you when you submit or approve.</p>
+      <p v-if="mailboxConnectError" class="mt-1 text-sm font-medium text-red-600">{{ mailboxConnectError }}</p>
+    </div>
+    <button
+      v-if="mailboxConnectState === 'polling'"
+      type="button"
+      :class="buttonClass"
+      @click="cancelMailboxConnect"
+    >Cancel</button>
+    <button
+      v-else
+      type="button"
+      :class="buttonClass"
+      :disabled="mailboxConnectState === 'starting'"
+      @click="startMailboxConnect"
+    >{{ mailboxConnectState === 'starting' ? 'Starting…' : 'Connect mailbox' }}</button>
   </div>
 </template>
