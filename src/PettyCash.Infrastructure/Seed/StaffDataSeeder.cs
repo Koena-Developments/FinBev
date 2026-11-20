@@ -220,15 +220,7 @@ public class StaffDataSeeder(
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(root.AdminUsername) && usernameToId.TryGetValue(root.AdminUsername, out var adminId))
-        {
-            var admin = await userManager.FindByIdAsync(adminId);
-            if (admin is not null)
-            {
-                await userManager.AddToRoleAsync(admin, AppRoles.Admin);
-                await userManager.AddToRoleAsync(admin, AppRoles.Approver);
-            }
-        }
+        await SyncFinanceAdminRoleAsync(root.AdminUsername, usernameToId);
 
         if (!await db.FloatAccounts.AnyAsync(cancellationToken))
         {
@@ -359,6 +351,41 @@ public class StaffDataSeeder(
             if (!await roleManager.RoleExistsAsync(role))
             {
                 await roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+    }
+
+    private async Task SyncFinanceAdminRoleAsync(
+        string? adminUsername,
+        Dictionary<string, string> usernameToId)
+    {
+        string? designatedAdminId = null;
+        if (!string.IsNullOrWhiteSpace(adminUsername)
+            && usernameToId.TryGetValue(adminUsername, out var adminId))
+        {
+            designatedAdminId = adminId;
+            var admin = await userManager.FindByIdAsync(adminId);
+            if (admin is not null)
+            {
+                await userManager.AddToRoleAsync(admin, AppRoles.Admin);
+                await userManager.AddToRoleAsync(admin, AppRoles.Approver);
+            }
+        }
+
+        var currentAdmins = await userManager.GetUsersInRoleAsync(AppRoles.Admin);
+        foreach (var user in currentAdmins)
+        {
+            if (designatedAdminId is null
+                || !string.Equals(user.Id, designatedAdminId, StringComparison.Ordinal))
+            {
+                var removed = await userManager.RemoveFromRoleAsync(user, AppRoles.Admin);
+                if (!removed.Succeeded)
+                {
+                    logger.LogWarning(
+                        "Could not remove Admin role from {Username}: {Errors}",
+                        user.UserName,
+                        string.Join(", ", removed.Errors.Select(e => e.Description)));
+                }
             }
         }
     }
