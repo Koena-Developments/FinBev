@@ -48,8 +48,33 @@ public sealed class RequestNotificationService(
             cancellationToken);
     }
 
-    public Task NotifyDepartmentApprovedAsync(Guid cashRequestId, string senderUserId, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    public async Task NotifyDepartmentApprovedAsync(Guid cashRequestId, string senderUserId, CancellationToken cancellationToken = default)
+    {
+        var ctx = await LoadContextAsync(cashRequestId, cancellationToken);
+        if (ctx is null)
+        {
+            return;
+        }
+
+        var financeApprover = ctx.PendingFinanceTask?.AssignedApprover;
+        if (financeApprover is null)
+        {
+            return;
+        }
+
+        var displayId = ToDisplayId(cashRequestId);
+        await SendToUserAsync(
+            senderUserId,
+            financeApprover,
+            $"Action required: Finance signature on petty cash form — {displayId}",
+            Body(
+                $"Hello {financeApprover.DisplayName},",
+                $"The department senior manager has signed. This petty cash request now needs your signature as Finance senior manager.",
+                FormatSummary(ctx),
+                FormLink(ctx.RequestId),
+                ApprovalsLink()),
+            cancellationToken);
+    }
 
     public Task NotifyFinanceApprovedAsync(Guid cashRequestId, string senderUserId, CancellationToken cancellationToken = default) =>
         Task.CompletedTask;
