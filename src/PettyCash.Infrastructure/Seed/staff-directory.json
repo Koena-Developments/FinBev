@@ -264,9 +264,9 @@
       "username": "thabang.motswenyane"
     },
     {
-      "department": "ICT",
+      "department": "Finance",
       "fullName": "Ntsebeng Malebina",
-      "title": "Senior Manager: Finance",
+      "title": "Internal Auditor",
       "username": "ntsebeng.malebina"
     },
     {
@@ -294,15 +294,15 @@
       "username": "lunga.ericjamda"
     },
     {
-      "department": "ICT",
+      "department": "Finance",
       "fullName": "Mpumelelo Qomiso",
-      "title": "Senior Manager: ICT",
+      "title": "Senior Manager: Finance",
       "username": "mpumelelo.qomiso"
     },
     {
       "department": "ICT",
       "fullName": "Goitseona Mmope",
-      "title": "Officer: ICT",
+      "title": "Senior Manager: ICT",
       "username": "goitseona.mmope"
     },
     {
@@ -774,9 +774,9 @@
       "username": "corie.anderson"
     },
     {
-      "department": "ICT",
+      "department": "Stakeholder Relations",
       "fullName": "Kagiso Mojela",
-      "title": "Senior Manager: ICT",
+      "title": "Intern: Stakeholder Relations",
       "username": "kagiso.mojela"
     }
   ],
@@ -794,11 +794,11 @@
       "acting": "sinnie.machebe"
     },
     "Finance": {
-      "primary": "ntsebeng.malebina",
+      "primary": "mpumelelo.qomiso",
       "acting": null
     },
     "ICT": {
-      "primary": "kagiso.mojela",
+      "primary": "goitseona.mmope",
       "acting": null
     },
     "LPSP (Learning Programmes and Strategic Projects)": {
@@ -842,5 +842,5 @@
       "acting": "telavukosi.hlongwane"
     }
   },
-  "adminUsername": "ntsebeng.malebina"
+  "adminUsername": "mpumelelo.qomiso"
 }
