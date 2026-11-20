@@ -220,6 +220,8 @@ public class StaffDataSeeder(
             }
         }
 
+        await SyncApproverMailboxEmailsAsync(root, usernameToId);
+
         await SyncFinanceAdminRoleAsync(root.AdminUsername, usernameToId);
 
         if (!await db.FloatAccounts.AnyAsync(cancellationToken))
@@ -352,6 +354,43 @@ public class StaffDataSeeder(
             {
                 await roleManager.CreateAsync(new IdentityRole(role));
             }
+        }
+    }
+
+    private async Task SyncApproverMailboxEmailsAsync(
+        StaffDirectoryRoot root,
+        Dictionary<string, string> usernameToId)
+    {
+        var usernames = root.ApprovalMatrix.Values
+            .SelectMany(e => new[] { e.Primary, e.Acting })
+            .Append(root.AdminUsername)
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var username in usernames)
+        {
+            if (!usernameToId.TryGetValue(username!, out var userId))
+            {
+                continue;
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                continue;
+            }
+
+            var desired = WorkEmail(username!);
+            if (string.IsNullOrWhiteSpace(desired)
+                || string.Equals(user.Email, desired, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            user.Email = desired;
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
         }
     }
 

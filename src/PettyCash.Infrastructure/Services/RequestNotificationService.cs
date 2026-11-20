@@ -16,7 +16,7 @@ namespace PettyCash.Infrastructure.Services;
 public sealed class RequestNotificationService(
     PettyCashDbContext db,
     IEmailSender emailSender,
-    GraphMailboxTokenProvider mailboxTokens,
+    IMailboxConnectionLookup mailboxConnections,
     IOptions<EmailOptions> emailOptions,
     ILogger<RequestNotificationService> logger) : IRequestNotificationService
 {
@@ -37,6 +37,7 @@ public sealed class RequestNotificationService(
         var displayId = ToDisplayId(cashRequestId);
         await SendToUserAsync(
             senderUserId,
+            fallbackSenderUserId: senderUserId,
             deptApprover,
             $"Action required: sign petty cash form — {displayId}",
             Body(
@@ -65,6 +66,7 @@ public sealed class RequestNotificationService(
         var displayId = ToDisplayId(cashRequestId);
         await SendToUserAsync(
             senderUserId,
+            fallbackSenderUserId: ctx.Claimant.Id,
             financeApprover,
             $"Action required: Finance signature on petty cash form — {displayId}",
             Body(
@@ -84,16 +86,21 @@ public sealed class RequestNotificationService(
 
     private async Task SendToUserAsync(
         string senderUserId,
+        string? fallbackSenderUserId,
         AppUser user,
         string subject,
         (string Html, string Text) body,
         CancellationToken cancellationToken,
         IReadOnlyList<EmailAttachment>? attachments = null)
     {
-        var address = ResolveEmailAddress(user);
+        var recipient = await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken)
+            ?? user;
+
+        var address = ResolveEmailAddress(recipient);
         if (address is null)
         {
-            logger.LogWarning("No email address for user {Username}; skipped \"{Subject}\"", user.UserName, subject);
+            logger.LogWarning("No email address for user {Username}; skipped \"{Subject}\"", recipient.UserName, subject);
             return;
         }
 
@@ -102,21 +109,36 @@ public sealed class RequestNotificationService(
         if (!string.IsNullOrWhiteSpace(redirect)
             && !string.Equals(redirect, address, StringComparison.OrdinalIgnoreCase))
         {
-            var note = $"(Pilot: intended recipient {user.DisplayName} &lt;{address}&gt;)";
-            var noteText = $"(Pilot: intended recipient {user.DisplayName} <{address}>)";
+            var note = $"(Pilot: intended recipient {recipient.DisplayName} &lt;{address}&gt;)";
+            var noteText = $"(Pilot: intended recipient {recipient.DisplayName} <{address}>)";
             html += $"<p><em>{note}</em></p>";
             text += $"{Environment.NewLine}{Environment.NewLine}{noteText}";
         }
 
-        if (emailOptions.Value.UseDelegatedGraph
-            && emailOptions.Value.UseMicrosoftGraph
-            && !mailboxTokens.HasMailboxConnected(senderUserId))
+        var delegated = emailOptions.Value.UseDelegatedGraph && emailOptions.Value.UseMicrosoftGraph;
+        var resolvedSender = delegated
+            ? ResolveDelegatedSender(senderUserId, fallbackSenderUserId)
+            : senderUserId;
+
+        if (delegated && resolvedSender is null)
         {
             logger.LogWarning(
-                "Skipped email \"{Subject}\" — user {SenderUserId} has not connected their Microsoft 365 mailbox.",
+                "Skipped email \"{Subject}\" to {Address} — no connected Microsoft 365 mailbox is available to send from.",
                 subject,
-                senderUserId);
+                address);
             return;
+        }
+
+        if (delegated
+            && !string.Equals(resolvedSender, senderUserId, StringComparison.Ordinal)
+            && !string.IsNullOrEmpty(senderUserId))
+        {
+            logger.LogInformation(
+                "Email \"{Subject}\" to {Address} will send from mailbox {SenderUserId} because user {PreferredSenderUserId} has not connected Microsoft 365.",
+                subject,
+                address,
+                resolvedSender,
+                senderUserId);
         }
 
         try
@@ -124,20 +146,41 @@ public sealed class RequestNotificationService(
             await emailSender.SendAsync(
                 new EmailMessage(
                     address,
-                    user.DisplayName,
+                    recipient.DisplayName,
                     subject,
                     html,
                     text,
                     attachments,
-                    SenderUserId: emailOptions.Value.UseDelegatedGraph && emailOptions.Value.UseMicrosoftGraph
-                        ? senderUserId
-                        : null),
+                    SenderUserId: delegated ? resolvedSender : null),
                 cancellationToken);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send email \"{Subject}\" to {Address}", subject, address);
         }
+    }
+
+    private string? ResolveDelegatedSender(string preferredSenderUserId, string? fallbackSenderUserId)
+    {
+        var connected = mailboxConnections.ConnectedUserIds();
+        if (connected.Count == 0)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrEmpty(preferredSenderUserId)
+            && connected.Contains(preferredSenderUserId, StringComparer.Ordinal))
+        {
+            return preferredSenderUserId;
+        }
+
+        if (!string.IsNullOrEmpty(fallbackSenderUserId)
+            && connected.Contains(fallbackSenderUserId, StringComparer.Ordinal))
+        {
+            return fallbackSenderUserId;
+        }
+
+        return connected[0];
     }
 
     private string? ResolveEmailAddress(AppUser user) =>
