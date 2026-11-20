@@ -264,9 +264,9 @@
       "username": "thabang.motswenyane"
     },
     {
-      "department": "Finance",
+      "department": "ICT",
       "fullName": "Ntsebeng Malebina",
-      "title": "Internal Auditor",
+      "title": "Senior Manager: Finance",
       "username": "ntsebeng.malebina"
     },
     {
@@ -774,9 +774,9 @@
       "username": "corie.anderson"
     },
     {
-      "department": "Stakeholder Relations",
+      "department": "ICT",
       "fullName": "Kagiso Mojela",
-      "title": "Intern: Stakeholder Relations",
+      "title": "Senior Manager: ICT",
       "username": "kagiso.mojela"
     }
   ],
@@ -794,12 +794,12 @@
       "acting": "sinnie.machebe"
     },
     "Finance": {
-      "primary": "mogopodi.pule",
-      "acting": "phumlani.dladla"
+      "primary": "ntsebeng.malebina",
+      "acting": null
     },
     "ICT": {
-      "primary": "mpumelelo.qomiso",
-      "acting": "goitseona.mmope"
+      "primary": "kagiso.mojela",
+      "acting": null
     },
     "LPSP (Learning Programmes and Strategic Projects)": {
       "primary": "zanele.sibanyoni",
