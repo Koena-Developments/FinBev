@@ -27,8 +27,8 @@ const notice = ref('')
 const submitting = ref(false)
 const { markSignedIn } = useAuth()
 const api = useApi()
-const config = useRuntimeConfig()
-const microsoftSignIn = computed(() => config.public.microsoftSignIn)
+const { data: signInMode } = await useFetch<{ enabled: boolean }>('/api/microsoft-sign-in-enabled')
+const microsoftSignIn = computed(() => signInMode.value?.enabled === true)
 const route = useRoute()
 
 const loginErrors: Record<string, string> = {

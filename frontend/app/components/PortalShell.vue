@@ -14,8 +14,10 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const config = useRuntimeConfig()
-const microsoftSignIn = computed(() => config.public.microsoftSignIn)
+const { data: signInMode } = useFetch<{ enabled: boolean }>('/api/microsoft-sign-in-enabled', {
+  key: 'microsoft-sign-in-enabled'
+})
+const microsoftSignIn = computed(() => signInMode.value?.enabled === true)
 const { me, loadMe, isApprover, isAdmin } = useMe()
 const { signOut } = useAuth()
 const { homePath } = usePersona()

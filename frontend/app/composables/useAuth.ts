@@ -49,9 +49,11 @@ export function useAuth() {
   }
 
   async function signOut() {
-    const config = useRuntimeConfig()
-    const microsoftSignIn = config.public.microsoftSignIn
-    const tenantId = String(config.public.microsoftTenantId || '').trim()
+    const mode = await $fetch<{ enabled: boolean; tenantId?: string | null }>(
+      '/api/microsoft-sign-in-enabled'
+    ).catch(() => ({ enabled: false, tenantId: null }))
+    const microsoftSignIn = mode.enabled
+    const tenantId = String(mode.tenantId || '').trim()
 
     token.value = null
     sessionReady.value = true
