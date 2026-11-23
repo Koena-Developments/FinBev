@@ -6,8 +6,8 @@ import {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const tenantId = String(config.microsoftTenantId || '').trim()
-  const clientId = String(config.microsoftClientId || '').trim()
+  const tenantId = String(process.env.NUXT_MICROSOFT_TENANT_ID || '').trim()
+  const clientId = String(process.env.NUXT_MICROSOFT_CLIENT_ID || '').trim()
   const query = getQuery(event)
   const error = typeof query.error === 'string' ? query.error : ''
   if (error) {
