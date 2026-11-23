@@ -7,13 +7,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  if (isPublic && to.path === '/login') {
+    return
+  }
+
   const { token, ensureSession, signOut } = useAuth()
   const signedIn = await ensureSession()
 
   if (isPublic) {
-    if (signedIn && to.path === '/login') {
-      return navigateTo('/')
-    }
     return
   }
 

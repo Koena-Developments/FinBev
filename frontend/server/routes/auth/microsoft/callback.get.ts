@@ -1,13 +1,17 @@
 import {
+  briefOAuthError,
   clearMicrosoftOAuthCookies,
   readMicrosoftOAuthCookies,
-  redeemMicrosoftAuthorizationCode
+  redeemMicrosoftAuthorizationCode,
+  redeemMicrosoftAuthorizationCodeConfidential
 } from '../../../utils/microsoftAuth'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const tenantId = String(process.env.NUXT_MICROSOFT_TENANT_ID || '').trim()
   const clientId = String(process.env.NUXT_MICROSOFT_CLIENT_ID || '').trim()
+  const clientSecret = String(process.env.NUXT_MICROSOFT_CLIENT_SECRET || '').trim()
+  const confidential = clientSecret.length > 0
   const query = getQuery(event)
   const error = typeof query.error === 'string' ? query.error : ''
   if (error) {
@@ -20,20 +24,41 @@ export default defineEventHandler(async (event) => {
   const { state, nonce, verifier } = readMicrosoftOAuthCookies(event)
   clearMicrosoftOAuthCookies(event)
 
-  if (!tenantId || !clientId || !code || !returnedState || returnedState !== state || !nonce || !verifier) {
+  if (
+    !tenantId
+    || !clientId
+    || !code
+    || !returnedState
+    || returnedState !== state
+    || !nonce
+    || (!confidential && !verifier)
+  ) {
     return sendRedirect(event, '/login?error=invalid-callback', 302)
   }
 
   const redirectUri = `${getRequestURL(event).origin}/auth/microsoft/callback`
   let idToken: string
   try {
-    idToken = await redeemMicrosoftAuthorizationCode(tenantId, clientId, redirectUri, code, verifier)
-  } catch {
-    return sendRedirect(event, '/login?error=microsoft-sign-in', 302)
+    idToken = confidential
+      ? await redeemMicrosoftAuthorizationCodeConfidential(
+          tenantId,
+          clientId,
+          clientSecret,
+          redirectUri,
+          code
+        )
+      : await redeemMicrosoftAuthorizationCode(tenantId, clientId, redirectUri, code, verifier)
+  } catch (exchangeError) {
+    const message = exchangeError instanceof Error ? exchangeError.message : 'microsoft-sign-in'
+    return sendRedirect(
+      event,
+      `/login?error=${encodeURIComponent(briefOAuthError(message))}`,
+      302
+    )
   }
 
-  const apiBase = String(config.apiBase || '').replace(/\/$/, '')
-  const proxySecret = String(config.proxySecret || '')
+  const apiBase = String(process.env.NUXT_API_BASE || config.apiBase || '').replace(/\/$/, '')
+  const proxySecret = String(process.env.NUXT_PROXY_SECRET || config.proxySecret || '')
   if (!apiBase) {
     return sendRedirect(event, '/login?error=api-not-configured', 302)
   }

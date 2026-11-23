@@ -45,7 +45,9 @@ if (import.meta.client) {
     () => route.query.error,
     (value) => {
       if (typeof value !== 'string' || !value) return
-      error.value = loginErrors[value] || decodeURIComponent(value)
+      error.value =
+        loginErrors[value] ||
+        decodeURIComponent(value).replace(/\+/g, ' ')
     },
     { immediate: true }
   )

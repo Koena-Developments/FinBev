@@ -78,6 +78,26 @@ export function microsoftAuthorizeUrl(
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?${query.toString()}`
 }
 
+export function microsoftAuthorizeUrlConfidential(
+  tenantId: string,
+  clientId: string,
+  redirectUri: string,
+  state: string,
+  nonce: string
+) {
+  const query = new URLSearchParams({
+    client_id: clientId,
+    response_type: 'code',
+    redirect_uri: redirectUri,
+    response_mode: 'query',
+    scope: 'openid profile email',
+    state,
+    nonce,
+    prompt: 'select_account'
+  })
+  return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?${query.toString()}`
+}
+
 export async function redeemMicrosoftAuthorizationCode(
   tenantId: string,
   clientId: string,
@@ -107,4 +127,46 @@ export async function redeemMicrosoftAuthorizationCode(
     throw new Error(detail)
   }
   return payload.id_token
+}
+
+export async function redeemMicrosoftAuthorizationCodeConfidential(
+  tenantId: string,
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,
+  code: string
+) {
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    scope: 'openid profile email'
+  })
+  const response = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body
+  })
+  const payload = (await response.json().catch(() => ({}))) as {
+    id_token?: string
+    error?: string
+    error_description?: string
+  }
+  if (!response.ok || !payload.id_token) {
+    const detail = payload.error_description || payload.error || 'token exchange failed'
+    throw new Error(detail)
+  }
+  return payload.id_token
+}
+
+export function briefOAuthError(message: string) {
+  const trimmed = message.trim()
+  if (trimmed.length <= 160) {
+    return trimmed
+  }
+
+  const code = trimmed.match(/AADSTS\d+/)?.[0]
+  return code ? `${code} — check Entra redirect URI (Web + SPA) and client ID.` : 'microsoft-sign-in'
 }
