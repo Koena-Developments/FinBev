@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using PettyCash.Application.Common;
 
 namespace PettyCash.Api.Security;
 
@@ -53,10 +54,17 @@ public static class ProductionSecurity
             throw new InvalidOperationException("Production database connections must encrypt with SSL.");
         }
 
-        if (!DeploymentSettings.IsAcceptableInitialPassword(configuration["Seed:InitialPassword"]))
+        if (!MicrosoftSignInSettings.IsConfigured(configuration)
+            && !DeploymentSettings.IsAcceptableInitialPassword(configuration["Seed:InitialPassword"]))
         {
             throw new InvalidOperationException(
                 "Set Seed__InitialPassword to a first password of at least 8 characters with an uppercase letter, a lowercase letter, and a number. New accounts use it once, then must change it. It is not written to a file.");
+        }
+
+        if (!MicrosoftSignInSettings.IsConfigured(configuration))
+        {
+            throw new InvalidOperationException(
+                "Microsoft sign-in is required in production. Set Auth__Microsoft__TenantId and Auth__Microsoft__ClientId.");
         }
 
         var secret = configuration["Proxy:Secret"];

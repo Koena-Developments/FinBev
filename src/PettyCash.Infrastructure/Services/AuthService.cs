@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using PettyCash.Application.Abstractions;
 using PettyCash.Application.Common;
 using PettyCash.Application.Dtos;
+using PettyCash.Application.Identity;
 using PettyCash.Application.Options;
 using PettyCash.Domain.Entities;
 using PettyCash.Infrastructure.Email;
@@ -22,10 +23,19 @@ public class AuthService(
     GraphMailboxTokenProvider graphMailboxTokens,
     IOptions<EmailOptions> emailOptions,
     IConfiguration configuration,
-    PasswordResetMailer resetMailer) : IAuthService
+    PasswordResetMailer resetMailer,
+    IEntraIdTokenValidator entraIdTokenValidator) : IAuthService
 {
+    private const string MicrosoftSignInMessage = "Sign in with your FoodBev Microsoft account.";
+
+    private bool MicrosoftSignInEnabled => MicrosoftSignInSettings.IsConfigured(configuration);
+
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
+        if (MicrosoftSignInEnabled)
+        {
+            return new LoginResponse(false, false, null, MicrosoftSignInMessage);
+        }
         var user = await FindByEmailAsync(request.Email, request.Username, cancellationToken);
         if (user is null)
         {
@@ -57,6 +67,10 @@ public class AuthService(
 
     public async Task<LoginResponse> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
+        if (MicrosoftSignInEnabled)
+        {
+            return new LoginResponse(false, false, null, MicrosoftSignInMessage);
+        }
         var user = await FindByEmailAsync(request.Email, request.Username, cancellationToken);
         if (user is null)
         {
@@ -91,6 +105,10 @@ public class AuthService(
 
     public async Task<ForgotPasswordResponse> SendResetCodeAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
+        if (MicrosoftSignInEnabled)
+        {
+            return new ForgotPasswordResponse(false, MicrosoftSignInMessage);
+        }
         const string sent = "If that email belongs to a staff account, we sent a 4-digit code. It expires in 15 minutes.";
         var user = await FindByEmailAsync(request.Email, null, cancellationToken);
         if (user is null)
@@ -139,6 +157,10 @@ public class AuthService(
 
     public async Task<LoginResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
+        if (MicrosoftSignInEnabled)
+        {
+            return new LoginResponse(false, false, null, MicrosoftSignInMessage);
+        }
         var user = await FindByEmailAsync(request.Email, null, cancellationToken);
         if (user is null || !IsResetCodeValid(user, request.Code))
         {
@@ -178,6 +200,77 @@ public class AuthService(
 
         var roles = await userManager.GetRolesAsync(user);
         var token = tokenService.CreateToken(user.Id, user.UserName!, roles);
+        return new LoginResponse(true, false, token, null);
+    }
+
+    public async Task<LoginResponse> SignInWithMicrosoftAsync(MicrosoftSessionRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!MicrosoftSignInEnabled)
+        {
+            return new LoginResponse(false, false, null, "Microsoft sign-in is not enabled.");
+        }
+
+        EntraIdTokenPrincipal principal;
+        try
+        {
+            principal = await entraIdTokenValidator.ValidateAsync(request.IdToken, request.Nonce, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            return new LoginResponse(false, false, null, "We could not verify your Microsoft sign-in. Try again.");
+        }
+
+        var emailOptionsValue = emailOptions.Value;
+        var staffRows = await db.Users.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+        var rows = staffRows.Select(user => new EntraStaffAccountMatcher.StaffRow(
+            user.Id,
+            user.UserName,
+            user.Email,
+            user.EntraUpn,
+            user.EntraObjectId,
+            FoodBevEmailAddressResolver.Resolve(user, emailOptionsValue))).ToList();
+
+        var match = EntraStaffAccountMatcher.Match(rows, principal);
+        if (match.Outcome == EntraStaffMatchOutcome.Ambiguous)
+        {
+            return new LoginResponse(false, false, null, "This Microsoft account matches more than one staff record. Contact IT.");
+        }
+
+        if (match.Outcome == EntraStaffMatchOutcome.NotFound || string.IsNullOrEmpty(match.UserId))
+        {
+            return new LoginResponse(false, false, null, "This Microsoft account is not on the petty cash list.");
+        }
+
+        var appUser = await userManager.FindByIdAsync(match.UserId).ConfigureAwait(false);
+        if (appUser is null)
+        {
+            return new LoginResponse(false, false, null, "This Microsoft account is not on the petty cash list.");
+        }
+
+        if (string.IsNullOrWhiteSpace(appUser.EntraObjectId))
+        {
+            appUser.EntraObjectId = principal.ObjectId;
+        }
+
+        if (string.IsNullOrWhiteSpace(appUser.EntraUpn))
+        {
+            var preferred = principal.PreferredUsername ?? principal.Email;
+            var username = appUser.UserName?.Trim();
+            var hasOverride = !string.IsNullOrWhiteSpace(username)
+                && emailOptionsValue.AddressOverrides.ContainsKey(username);
+            if (!hasOverride && !string.IsNullOrWhiteSpace(preferred) && preferred.Contains('@', StringComparison.Ordinal))
+            {
+                appUser.EntraUpn = preferred.Trim();
+            }
+        }
+
+        appUser.MustChangePassword = false;
+        await userManager.UpdateAsync(appUser).ConfigureAwait(false);
+        await ClearFailuresAsync(appUser).ConfigureAwait(false);
+
+        var roles = await userManager.GetRolesAsync(appUser).ConfigureAwait(false);
+        var token = tokenService.CreateToken(appUser.Id, appUser.UserName!, roles);
         return new LoginResponse(true, false, token, null);
     }
 

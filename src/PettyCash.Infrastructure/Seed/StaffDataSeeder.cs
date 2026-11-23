@@ -124,7 +124,7 @@ public class StaffDataSeeder(
                     DisplayName = member.FullName,
                     Title = member.Title,
                     DepartmentId = departmentId,
-                    MustChangePassword = true,
+                    MustChangePassword = RequirePasswordChangeOnFirstSignIn(),
                     Email = WorkEmail(member.Username),
                     EmailConfirmed = true
                 };
@@ -512,9 +512,17 @@ public class StaffDataSeeder(
         return string.IsNullOrWhiteSpace(address) ? $"{username}@pettycash.local" : address;
     }
 
+    private bool RequirePasswordChangeOnFirstSignIn() =>
+        env.IsDevelopment() && !MicrosoftSignInSettings.IsConfigured(configuration);
+
     private string? PasswordForNewAccount()
     {
-        if (env.IsDevelopment())
+        if (env.IsDevelopment() && !MicrosoftSignInSettings.IsConfigured(configuration))
+        {
+            return GenerateTemporaryPassword();
+        }
+
+        if (MicrosoftSignInSettings.IsConfigured(configuration))
         {
             return GenerateTemporaryPassword();
         }

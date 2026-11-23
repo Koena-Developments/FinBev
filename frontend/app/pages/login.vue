@@ -27,6 +27,29 @@ const notice = ref('')
 const submitting = ref(false)
 const { markSignedIn } = useAuth()
 const api = useApi()
+const config = useRuntimeConfig()
+const microsoftSignIn = computed(() => config.public.microsoftSignIn)
+const route = useRoute()
+
+const loginErrors: Record<string, string> = {
+  'microsoft-not-configured': 'Microsoft sign-in is not set up yet. Contact IT.',
+  'invalid-callback': 'Microsoft sign-in did not complete. Try again.',
+  'microsoft-sign-in': 'Microsoft sign-in failed. Try again.',
+  'api-not-configured': 'The portal cannot reach the API. Contact IT.',
+  'api-unavailable': 'The service is unavailable. Try again in a moment.',
+  'sign-in-failed': 'We could not sign you in. Try again.'
+}
+
+if (import.meta.client) {
+  watch(
+    () => route.query.error,
+    (value) => {
+      if (typeof value !== 'string' || !value) return
+      error.value = loginErrors[value] || decodeURIComponent(value)
+    },
+    { immediate: true }
+  )
+}
 
 if (import.meta.client) {
   const saved = localStorage.getItem(EMAIL_HINT_KEY)
@@ -170,9 +193,25 @@ async function submit() {
             <ThemeToggle />
           </div>
           <img src="/images/foodbev-logo.png" alt="FoodBev Manufacturing SETA" class="finbev-logo" />
-          <h2>{{ resetting ? 'Reset password' : 'Sign in' }}</h2>
-          <p class="finbev-form__lead">{{ resetting ? (codeSent ? 'Enter the 4-digit code from your email, then choose a new password.' : 'We will email a 4-digit code to confirm this account.') : 'Welcome back to FinBev' }}</p>
+          <h2>{{ microsoftSignIn ? 'Sign in' : resetting ? 'Reset password' : 'Sign in' }}</h2>
+          <p class="finbev-form__lead">
+            {{
+              microsoftSignIn
+                ? 'Use your FoodBev Microsoft account.'
+                : resetting
+                  ? codeSent
+                    ? 'Enter the 4-digit code from your email, then choose a new password.'
+                    : 'We will email a 4-digit code to confirm this account.'
+                  : 'Welcome back to FinBev'
+            }}
+          </p>
 
+          <template v-if="microsoftSignIn">
+            <p v-if="error" class="finbev-error" role="alert">{{ error }}</p>
+            <a href="/auth/microsoft/start" class="finbev-submit finbev-submit--link">Sign in with Microsoft</a>
+          </template>
+
+          <template v-else>
           <label class="finbev-field" for="email">
             Email
             <span class="finbev-field__control">
@@ -277,6 +316,7 @@ async function submit() {
           <button type="submit" class="finbev-submit" :disabled="submitting">
             {{ submitting ? (resetting ? (codeSent ? 'Saving…' : 'Sending…') : 'Signing in…') : (resetting ? (codeSent ? 'Save new password' : 'Email me a code') : 'Sign in') }}
           </button>
+          </template>
         </form>
       </section>
     </div>
@@ -533,6 +573,12 @@ async function submit() {
 
 .finbev-submit:hover:not(:disabled) {
   filter: brightness(0.94);
+}
+
+.finbev-submit--link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
 }
 
 .finbev-submit:disabled {

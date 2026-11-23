@@ -49,6 +49,10 @@ export function useAuth() {
   }
 
   async function signOut() {
+    const config = useRuntimeConfig()
+    const microsoftSignIn = config.public.microsoftSignIn
+    const tenantId = String(config.public.microsoftTenantId || '').trim()
+
     token.value = null
     sessionReady.value = true
     sessionId.value++
@@ -64,6 +68,11 @@ export function useAuth() {
         })
       } catch {
         // The local session is already cleared.
+      }
+      if (microsoftSignIn && tenantId) {
+        const redirect = encodeURIComponent(`${window.location.origin}/login`)
+        window.location.href = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${redirect}`
+        return
       }
       if (useRoute().path !== '/login') await navigateTo('/login')
     }

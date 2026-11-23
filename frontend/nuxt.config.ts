@@ -23,7 +23,13 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiBase,
     proxySecret: process.env.NUXT_PROXY_SECRET || '',
-    public: {}
+    microsoftTenantId: process.env.NUXT_MICROSOFT_TENANT_ID || '',
+    microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
+    public: {
+      microsoftSignIn:
+        Boolean(process.env.NUXT_MICROSOFT_TENANT_ID) && Boolean(process.env.NUXT_MICROSOFT_CLIENT_ID),
+      microsoftTenantId: process.env.NUXT_MICROSOFT_TENANT_ID || ''
+    }
   },
   routeRules: {
     '/**': {

@@ -14,6 +14,8 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const config = useRuntimeConfig()
+const microsoftSignIn = computed(() => config.public.microsoftSignIn)
 const { me, loadMe, isApprover, isAdmin } = useMe()
 const { signOut } = useAuth()
 const { homePath } = usePersona()
@@ -238,6 +240,7 @@ onBeforeUnmount(() => {
         <div class="mt-4 px-5 text-[11px] font-semibold tracking-[0.14em] text-slate-400">OTHER</div>
         <div class="relative mt-2 space-y-0.5 px-3 pb-5">
           <NuxtLink
+            v-if="!microsoftSignIn"
             to="/change-password"
             class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-foodbev-paper"
           >

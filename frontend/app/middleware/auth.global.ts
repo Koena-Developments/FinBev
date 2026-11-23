@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const publicPaths = ['/login', '/change-password'] as const
+  const publicPaths = ['/login'] as const
   const isPublic = publicPaths.includes(to.path as typeof publicPaths[number])
 
   // The session cookie is on this site. The browser sends it, so auth runs in the browser.
@@ -29,10 +29,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (!profile) {
       return navigateTo('/login')
     }
-    if (profile.mustChangePassword && to.path !== '/change-password') {
-      return navigateTo('/change-password')
-    }
-
     if (to.path.startsWith('/manager') && !isDeptManager) {
       return navigateTo(hasRole('Admin') ? '/finance' : '/requests')
     }

@@ -32,3 +32,5 @@ public sealed record MeResponse(
     string? Emoji);
 
 public sealed record SetEmojiRequest(string? Emoji);
+
+public sealed record MicrosoftSessionRequest(string IdToken, string Nonce);

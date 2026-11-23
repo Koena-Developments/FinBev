@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IPettyCashFormService, PettyCashFormService>();
         services.Configure<PettyCashFormOptions>(configuration.GetSection(PettyCashFormOptions.SectionName));
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<MicrosoftSignInOptions>(configuration.GetSection(MicrosoftSignInOptions.SectionName));
+        services.AddSingleton<IEntraIdTokenValidator, EntraIdTokenValidator>();
         services.AddScoped<IRequestNotificationService, RequestNotificationService>();
 
         var emailSection = configuration.GetSection(EmailOptions.SectionName);

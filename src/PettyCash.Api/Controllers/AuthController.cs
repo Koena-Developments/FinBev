@@ -3,14 +3,37 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PettyCash.Api.Security;
 using PettyCash.Application.Abstractions;
+using PettyCash.Application.Common;
 using PettyCash.Application.Dtos;
 
 namespace PettyCash.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService authService, ICurrentUser currentUser, IHostEnvironment env) : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    ICurrentUser currentUser,
+    IHostEnvironment env,
+    IConfiguration configuration) : ControllerBase
 {
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("microsoft/session")]
+    public async Task<ActionResult<LoginResponse>> MicrosoftSession(
+        [FromBody] MicrosoftSessionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.SignInWithMicrosoftAsync(request, cancellationToken);
+        return Ok(IssueSession(result));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("microsoft/enabled")]
+    public IActionResult MicrosoftEnabled()
+    {
+        return Ok(new { enabled = MicrosoftSignInSettings.IsConfigured(configuration) });
+    }
+
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
     [HttpPost("login")]

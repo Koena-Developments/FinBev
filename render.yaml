@@ -41,6 +41,10 @@ services:
         sync: false
       - key: Email__PublicAppBaseUrl
         sync: false
+      - key: Auth__Microsoft__TenantId
+        sync: false
+      - key: Auth__Microsoft__ClientId
+        sync: false
       - key: Seed__InitialPassword
         sync: false
       - key: Graph__TenantId
